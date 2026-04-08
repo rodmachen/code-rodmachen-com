@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/classic.css';
 
 interface Props {
   title?: string;
@@ -29,30 +30,72 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
     <meta name="twitter:description" content={description} />
   </head>
   <body>
-    <div class="container">
-      <header>
-        <div class="header-inner">
-          <div class="site-title">
-            <a href="/">code.rodmachen.com</a>
-          </div>
-          <div class="header-links">
-            <a href="https://rodmachen.com">Rod Machen</a>
-          </div>
-        </div>
-      </header>
+    <div class="content classic-window">
+      <h1 class="title">code.rodmachen.com</h1>
       
-      <main>
-        <slot />
-      </main>
+      <!-- Classic OS window controls -->
+      <div class="control-box close-box"><a class="control-box-inner" href="/" aria-label="Home"></a></div>
+      <div class="control-box zoom-box"><div class="zoom-box-inner" aria-label="Zoom"></div></div>
+      <div class="control-box windowshade-box"><div class="windowshade-box-inner" aria-label="Collapse"></div></div>
       
-      <footer>
-        <p>
-          &copy; {new Date().getFullYear()} Rod Machen. 
-          Part of <a href="https://rodmachen.com">rodmachen.com</a> | 
-          <a href="https://edition.rodmachen.com">edition</a> | 
-          <a href="https://photo.rodmachen.com">photo</a>
-        </p>
-      </footer>
+      <div class="inner window-pane">
+        <header>
+          <div class="header-inner">
+            <div class="site-title">
+              <a href="/">Terminal</a>
+            </div>
+            <div class="header-links">
+              <a href="https://rodmachen.com">Rod Machen</a>
+            </div>
+          </div>
+        </header>
+        
+        <main>
+          <slot />
+        </main>
+        
+        <footer>
+          <p>
+            &copy; {new Date().getFullYear()} Rod Machen. 
+            Part of <a href="https://rodmachen.com">rodmachen.com</a> | 
+            <a href="https://edition.rodmachen.com">edition</a> | 
+            <a href="https://photo.rodmachen.com">photo</a>
+          </p>
+        </footer>
+      </div>
     </div>
   </body>
 </html>
+
+<style>
+  /* Override classic.css defaults to make it fit a modern blog */
+  .classic-window {
+    width: 95% !important;
+    max-width: 800px;
+    margin: 40px auto !important;
+    /* Use the font for the window frame but let global handle content */
+    font-family: 'ChicagoFLF', sans-serif;
+  }
+  
+  .window-pane {
+    background-color: var(--bg) !important;
+    padding: 2rem;
+    font-family: var(--font-sans); /* Use modern font for readability */
+    font-size: 1.1rem; /* Better base size than the 12px from classic.css */
+    color: var(--text);
+  }
+  
+  /* Reset some of classic.css aggressive overrides that hurt readability */
+  .window-pane h1, .window-pane h2, .window-pane h3 {
+    font-family: 'ChicagoFLF', var(--font-sans);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: normal; /* Chicago shouldn't be bolded artificially */
+  }
+  
+  /* Make sure the header looks nice inside the pane */
+  header {
+    margin-top: 0;
+    padding-top: 0;
+  }
+</style>
