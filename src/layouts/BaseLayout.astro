@@ -1,0 +1,58 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "code.rodmachen.com", description = "Tech and code writing by Rod Machen" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    
+    <!-- Open Graph / Twitter meta tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="header-inner">
+          <div class="site-title">
+            <a href="/">code.rodmachen.com</a>
+          </div>
+          <div class="header-links">
+            <a href="https://rodmachen.com">Rod Machen</a>
+          </div>
+        </div>
+      </header>
+      
+      <main>
+        <slot />
+      </main>
+      
+      <footer>
+        <p>
+          &copy; {new Date().getFullYear()} Rod Machen. 
+          Part of <a href="https://rodmachen.com">rodmachen.com</a> | 
+          <a href="https://edition.rodmachen.com">edition</a> | 
+          <a href="https://photo.rodmachen.com">photo</a>
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
