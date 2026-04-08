@@ -46,6 +46,7 @@ a:hover {
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: 'ChicagoFLF', var(--font-sans);
   font-weight: normal; /* Classic Mac UI often relied on font family rather than thick weights */
   line-height: 1.2;
   margin-top: 1.5rem;
