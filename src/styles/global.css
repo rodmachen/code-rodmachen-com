@@ -135,29 +135,6 @@ footer a {
   color: var(--link);
 }
 
-/* 1. Classic Platinum & Periwinkle Dither (2x2 Checkerboard) */
-.bg-os8-dither {
-  background-color: #EEEEEE; /* Platinum gray base */
-  background-image: conic-gradient(
-    #9999CC 90deg, 
-    transparent 90deg 180deg, 
-    #9999CC 180deg 270deg, 
-    transparent 270deg
-  );
-  background-size: 2px 2px;
-  image-rendering: pixelated; /* Forces hard pixel edges */
-}
-
-/* 2. Mac OS "Woven" Crosshatch Pattern (8x8 Weave) */
-.bg-os8-weave {
-  background-color: #EEEEEE; /* Platinum gray base */
-  background-image: 
-    repeating-linear-gradient(45deg, #CCCCCC 0, #CCCCCC 1px, transparent 1px, transparent 4px),
-    repeating-linear-gradient(-45deg, #CCCCCC 0, #CCCCCC 1px, transparent 1px, transparent 4px);
-  background-size: 8px 8px;
-  image-rendering: pixelated;
-}
-
 /* 3. Bondi Blue Stipple (Tiny 2x2 Base64 PNG) */
 .bg-os8-bondi {
   /* Exactly 104 bytes. A 2x2 PNG using #007788 and #00AAAA for a classic teal iMac vibe */
