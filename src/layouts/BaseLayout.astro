@@ -11,7 +11,7 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-os8-bondi">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -29,7 +29,7 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
   </head>
-  <body class="bg-os8-bondi">
+  <body>
     <!-- Classic Mac OS Menu Bar -->
     <nav class="classic-menu-bar">
       <div class="menu-items">
@@ -169,6 +169,11 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
     flex-direction: column;
     gap: 20px;
     z-index: 50;
+  }
+  
+  /* Window Controls Usability */
+  .control-box {
+    cursor: pointer;
   }
   .desktop-icon {
     display: flex;
