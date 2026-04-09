@@ -24,23 +24,15 @@
 	0 0 0 3px #000;
 }
 
-html,
-body {
-    margin: 0;
-    font-family: 'ChicagoFLF', 'Times New Roman', 'Georgia', serif;
-    font-size: 12px;
-    font-weight: normal;
-}
 button {
     font-family: inherit;
     font-size: inherit;
     color: inherit;
 }
-a {
-    color: #000;
+:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 2px;
 }
-:focus {outline:none;}
-::-moz-focus-inner {border:0;}
 
 /* Window layout */
 .content {
@@ -172,14 +164,4 @@ a {
     padding: 0;
     position: absolute;
     width: 1px;
-}
-
-.clearfix:before,
-.clearfix:after {
-    content: " ";
-    display: table;
-}
-
-.clearfix:after {
-    clear: both;
 }

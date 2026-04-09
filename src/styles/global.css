@@ -69,7 +69,7 @@ pre {
   overflow-x: auto;
   /* Classic inset border */
   border: 2px solid;
-  border-color: #888888 #ffffff #ffffff #888888;
+  border-color: var(--border-light) var(--border-highlight) var(--border-highlight) var(--border-light);
 }
 
 :not(pre) > code {
@@ -79,7 +79,7 @@ pre {
 }
 
 blockquote {
-  border-left: 3px solid #000000;
+  border-left: 3px solid var(--border);
   margin: 1.5rem 0;
   padding: 0.5rem 0 0.5rem 1rem;
   color: var(--text);
