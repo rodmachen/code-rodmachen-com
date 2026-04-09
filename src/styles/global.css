@@ -28,7 +28,7 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg);
+  background-color: transparent;
   color: var(--text);
   line-height: 1.4; /* Tighter line height for retro feel */
   margin: 0;
