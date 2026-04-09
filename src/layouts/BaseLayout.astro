@@ -69,16 +69,16 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
 
 <style>
   /* Override classic.css defaults to make it fit a modern blog */
-  .classic-window {
-    width: 95% !important;
+  div.classic-window {
+    width: 95%;
     max-width: 800px;
-    margin: 40px auto !important;
+    margin: 40px auto;
     /* Use the font for the window frame but let global handle content */
     font-family: 'ChicagoFLF', sans-serif;
   }
   
-  .window-pane {
-    background-color: var(--bg) !important;
+  div.window-pane {
+    background-color: var(--bg);
     padding: 2rem;
     font-family: var(--font-sans); /* Use modern font for readability */
     font-size: 1.1rem; /* Better base size than the 12px from classic.css */

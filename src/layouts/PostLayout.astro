@@ -42,8 +42,8 @@ const formattedDate = dateObj.toLocaleDateString('en-US', {
       <slot />
     </div>
     
-    <div style="margin-top: 3rem; text-align: center;">
-      <a href="/" class="command_button" style="text-decoration: none; padding: 0 16px; line-height: 22px; color: black; font-family: 'ChicagoFLF', sans-serif;">Back to Home</a>
+    <div class="back-action">
+      <a href="/" class="command_button back-button">Back to Home</a>
     </div>
   </article>
 </BaseLayout>
@@ -88,5 +88,18 @@ const formattedDate = dateObj.toLocaleDateString('en-US', {
   
   .post-content {
     font-size: 1.125rem;
+  }
+  
+  .back-action {
+    margin-top: 3rem;
+    text-align: center;
+  }
+  
+  .back-button {
+    text-decoration: none;
+    padding: 0 16px;
+    line-height: 22px;
+    color: black;
+    font-family: 'ChicagoFLF', sans-serif;
   }
 </style>
