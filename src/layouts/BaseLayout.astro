@@ -171,9 +171,26 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
     z-index: 50;
   }
   
-  /* Window Controls Usability */
+  /* Window Controls Usability & Fixes */
   .control-box {
     cursor: pointer;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Fix the windowshade button which had 0 width in classic.css */
+  .windowshade-box-inner {
+    width: 10px !important;
+    height: 3px !important;
+    margin-top: 0 !important;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+  }
+  /* Center the zoom box */
+  .zoom-box-inner {
+    margin: auto;
   }
   .desktop-icon {
     display: flex;
