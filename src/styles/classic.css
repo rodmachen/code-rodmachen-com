@@ -93,6 +93,10 @@ button {
 	inset -1px -1px 0px 0px #fff,
 	inset 1px 1px 0px 0px #888;
 }
+button.control-box {
+    border: none;
+    appearance: none;
+}
 .close-box.control-box {
     left: 4px;
 }

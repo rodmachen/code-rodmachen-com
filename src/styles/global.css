@@ -1,3 +1,4 @@
+/* Classic Mac theme: forced light mode, no dark mode variant */
 :root {
   --bg: #ffffff;
   --text: #000000;
@@ -6,24 +7,11 @@
   --link-hover: #0000aa;
   --accent: #000000;
   --border: #000000;
+  --border-light: #888888;
+  --border-highlight: #ffffff;
   --code-bg: #ffffff;
   --font-sans: 'Geneva', 'Arial', sans-serif;
   --font-mono: 'Monaco', 'Courier New', 'Courier', monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  /* Classic Mac didn't have dark mode, but we can keep it slightly muted if we want,
-     or just force the light document look. We'll force the document look for authenticity. */
-  :root {
-    --bg: #ffffff;
-    --text: #000000;
-    --text-muted: #444444;
-    --link: #0000ee;
-    --link-hover: #0000aa;
-    --accent: #000000;
-    --border: #000000;
-    --code-bg: #ffffff;
-  }
 }
 
 body {
@@ -84,41 +72,6 @@ blockquote {
   padding: 0.5rem 0 0.5rem 1rem;
   color: var(--text);
   font-style: italic;
-}
-
-.container {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-header {
-  padding: 1rem 0;
-  margin-bottom: 2rem;
-  border-bottom: 2px solid var(--border);
-}
-
-.header-inner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.site-title {
-  font-family: 'ChicagoFLF', var(--font-sans);
-  font-size: 1.25rem;
-  color: var(--text);
-}
-
-.site-title a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.header-links a {
-  margin-left: 1rem;
-  color: var(--link);
-  font-size: 0.95rem;
 }
 
 footer {
