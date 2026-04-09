@@ -207,14 +207,13 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
   div.classic-window {
     width: 95%;
     max-width: 800px;
-    margin: 40px auto;
+    margin: 64px auto 40px auto; /* 24px for menu bar + 40px top gap, 40px bottom gap */
     /* Inner scrolling updates */
-    height: calc(100vh - 80px);
+    height: calc(100vh - 104px);
     display: flex;
     flex-direction: column;
     /* Use the font for the window frame but let global handle content */
     font-family: 'ChicagoFLF', sans-serif;
-    background-color: var(--bg);
     transition: all 0.2s ease;
   }
 
@@ -280,4 +279,3 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
     box-shadow: inset 1px 1px 0px #ffffff, inset -1px -1px 0px #aaaaaa;
   }
 </style>
-/style>
