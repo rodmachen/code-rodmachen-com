@@ -28,11 +28,9 @@ html,
 body {
     background-color: #EEEEEE;
     margin: 0;
-    height: 100%;
     font-family: 'ChicagoFLF', 'Times New Roman', 'Georgia', serif;
     font-size: 12px;
     font-weight: normal;
-    overflow: hidden;
 }
 button {
     font-family: inherit;
