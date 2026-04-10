@@ -61,18 +61,28 @@ test.describe('classic window', () => {
     await expect(pane).toBeVisible();
   });
 
-  test('apple logo img is present', async ({ page }) => {
+  test('apple logo SVG is present in menu bar', async ({ page }) => {
     await page.goto('/');
-    // Will be updated to img[src*="apple-logo"] once SVG is added in Step 4
-    const appleMenu = page.locator('.apple-logo, img[alt*="Apple"]').first();
-    await expect(appleMenu).toBeVisible();
+    const appleImg = page.locator('.apple-logo img[src*="apple-logo"]');
+    await expect(appleImg).toBeVisible();
   });
 
-  test('desktop icons are present', async ({ page }) => {
+  test('five desktop icons are present', async ({ page }) => {
     await page.goto('/');
     const icons = page.locator('.desktop-icon');
     const count = await icons.count();
-    expect(count).toBeGreaterThanOrEqual(2);
+    expect(count).toBe(5);
+  });
+
+  test('desktop icon SVGs load', async ({ page }) => {
+    await page.goto('/');
+    const iconImgs = page.locator('.desktop-icons img');
+    const count = await iconImgs.count();
+    expect(count).toBe(5);
+    // Each img should be visible
+    for (let i = 0; i < count; i++) {
+      await expect(iconImgs.nth(i)).toBeVisible();
+    }
   });
 
   test('window has drop shadow', async ({ page }) => {

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <!-- Browse the Internet: globe icon -->
+  <circle cx="20" cy="20" r="17" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <!-- Latitude lines -->
+  <ellipse cx="20" cy="20" rx="17" ry="8" fill="none" stroke="#000" stroke-width="1"/>
+  <line x1="3" y1="20" x2="37" y2="20" stroke="#000" stroke-width="1"/>
+  <!-- Longitude lines -->
+  <ellipse cx="20" cy="20" rx="9" ry="17" fill="none" stroke="#000" stroke-width="1"/>
+  <!-- Vertical axis -->
+  <line x1="20" y1="3" x2="20" y2="37" stroke="#000" stroke-width="1"/>
+</svg>

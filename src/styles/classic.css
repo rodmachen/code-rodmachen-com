@@ -132,37 +132,46 @@ button.control-box {
     left: 4px;
 }
 .control-box-inner {
-    display: block;        
-    height: 12px;
-    width: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 11px;
+    width: 11px;
     background-image:
-	linear-gradient(to bottom right, #999, #aaa, #bbb, #ccc, #ddd, #eee, #fff);
-    border: 1px solid #222;
+	linear-gradient(to bottom right, #bbb, #ccc, #ddd, #eee, #fff);
+    border: 1px solid #444;
     box-shadow:
-	inset 1px 1px 0px 0px #ccc,
+	inset 1px 1px 0px 0px #fff,
 	inset -1px -1px 0px 0px #888;
     text-indent: -99999em;
 }
 .control-box-inner:active {
-    box-shadow: none;
+    box-shadow:
+	inset 1px 1px 0px 0px #888,
+	inset -1px -1px 0px 0px #fff;
 }
 .zoom-box.control-box {
     right: 20px;
 }
+/* Zoom glyph: small square in upper-left quadrant */
 .zoom-box-inner {
-    height: 6px;
-    width: 7px;
-    border-bottom: 1px solid #000;
-    border-right: 1px solid #000;
+    width: 5px;
+    height: 5px;
+    border: 1px solid #000;
+    align-self: flex-start;
+    margin-top: 1px;
+    margin-left: 1px;
+    flex-shrink: 0;
 }
 .windowshade-box.control-box {
     right: 4px;
 }
+/* Windowshade glyph: centered horizontal line */
 .windowshade-box-inner {
-    margin-top: 3px;
-    height: 3px;
-    border-top: 1px solid #000;
-    border-bottom: 1px solid #000;
+    width: 7px;
+    height: 1px;
+    background: #000;
+    flex-shrink: 0;
 }
 .content .command_button {
     height: 22px;

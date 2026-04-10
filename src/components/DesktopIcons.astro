@@ -1,24 +1,38 @@
 ---
-// DesktopIcons component — classic Mac OS right-side desktop icons
+// DesktopIcons component — classic Mac OS 8.1 style right-side desktop icons
+// Triggers for About and Contact modals are handled by classic-ui.ts via data-modal
 ---
 
 <div class="desktop-icons">
-  <a href="/about" class="desktop-icon">
-    <svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 4h14l10 10v14H4V4z" fill="#fff" stroke="#000" stroke-width="2"/>
-      <path d="M18 4v10h10" fill="none" stroke="#000" stroke-width="2"/>
-      <path d="M8 12h8M8 16h12M8 20h12M8 24h8" stroke="#000" stroke-width="2"/>
-    </svg>
+  <!-- Hard disk: links to home -->
+  <a href="/" class="desktop-icon">
+    <img src="/img/icons/disk.svg" alt="" width="40" height="36" aria-hidden="true" />
+    <span>code.rodmachen.com</span>
+  </a>
+
+  <!-- Info Center: opens About modal -->
+  <button type="button" class="desktop-icon" data-modal="modal-about" aria-label="Open About">
+    <img src="/img/icons/info.svg" alt="" width="40" height="40" aria-hidden="true" />
     <span>About</span>
+  </button>
+
+  <!-- Globe: links to rodmachen.com in new tab -->
+  <a href="https://rodmachen.com" target="_blank" rel="noopener noreferrer" class="desktop-icon">
+    <img src="/img/icons/globe.svg" alt="" width="40" height="40" aria-hidden="true" />
+    <span>Browse the Internet</span>
   </a>
-  <a href="/contact" class="desktop-icon">
-    <svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 4h14l10 10v14H4V4z" fill="#fff" stroke="#000" stroke-width="2"/>
-      <path d="M18 4v10h10" fill="none" stroke="#000" stroke-width="2"/>
-      <path d="M8 12h8M8 16h12M8 20h12M8 24h8" stroke="#000" stroke-width="2"/>
-    </svg>
-    <span>Contact</span>
-  </a>
+
+  <!-- Mail: opens Contact modal -->
+  <button type="button" class="desktop-icon" data-modal="modal-contact" aria-label="Open Contact">
+    <img src="/img/icons/mail.svg" alt="" width="40" height="32" aria-hidden="true" />
+    <span>Mail</span>
+  </button>
+
+  <!-- Trash: decorative -->
+  <div class="desktop-icon desktop-icon--static" aria-hidden="true">
+    <img src="/img/icons/trash.svg" alt="" width="32" height="40" />
+    <span>Trash</span>
+  </div>
 </div>
 
 <style>
@@ -28,7 +42,7 @@
     right: 20px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     z-index: 50;
   }
   .desktop-icon {
@@ -38,20 +52,39 @@
     text-decoration: none;
     color: white;
     font-family: 'Geneva', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     text-shadow:
       1px 1px 0 #000,
       -1px -1px 0 #000,
       1px -1px 0 #000,
       -1px 1px 0 #000;
-    width: 60px;
+    width: 64px;
     text-align: center;
+    cursor: pointer;
+    /* reset button styles */
+    background: none;
+    border: none;
+    padding: 2px;
+    gap: 3px;
   }
   .desktop-icon:hover {
     color: #ffff00;
   }
-  .desktop-icon svg {
-    margin-bottom: 4px;
+  .desktop-icon:hover img {
+    filter: brightness(0.7) sepia(1) saturate(5) hue-rotate(15deg);
+  }
+  .desktop-icon img {
+    display: block;
+    filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
+  }
+  /* Trash: no hover effect */
+  .desktop-icon--static {
+    cursor: default;
+  }
+  .desktop-icon--static:hover {
+    color: white;
+  }
+  .desktop-icon--static:hover img {
     filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
   }
 </style>
