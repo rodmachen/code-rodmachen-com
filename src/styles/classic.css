@@ -30,8 +30,8 @@ button {
     color: inherit;
 }
 :focus-visible {
-    outline: 2px solid #000;
-    outline-offset: 2px;
+    outline: 1px dotted #000;
+    outline-offset: 1px;
 }
 
 /* Window layout */
@@ -59,14 +59,40 @@ button {
 	inset 1px 1px 0px 0px #fff,
 	inset -1px -1px 0px 0px #999;
 }
+/* Title bar */
 .title {
     width: 100%;
-    text-align: center;
     font-size: inherit;
     font-weight: inherit;
-    padding: 1px 0;
-    background-size: 3px 2px;
-    margin: 0 0 0 0;
+    margin: 0;
+    padding: 0 44px; /* leave room for control boxes */
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+/* Pinstripe racing lines flanking title text */
+.title::before,
+.title::after {
+    content: '';
+    flex: 1;
+    height: 14px;
+    min-width: 4px;
+    background-image: repeating-linear-gradient(
+        to bottom,
+        #888 0px,
+        #888 1px,
+        #bbb 1px,
+        #bbb 2px
+    );
+}
+/* Inactive window: plain gray title bar, no stripes */
+.classic-window.inactive .title::before,
+.classic-window.inactive .title::after {
+    background-image: none;
 }
 .content .icon {
     text-align: center;
@@ -86,12 +112,17 @@ button {
 }
 .control-box {
     position: absolute;
-    top: 3px;
+    top: 4px;
     padding: 1px;
     background-color: #222;
     box-shadow:
 	inset -1px -1px 0px 0px #fff,
 	inset 1px 1px 0px 0px #888;
+}
+/* Inactive window: control box glyphs become hollow */
+.classic-window.inactive .control-box-inner {
+    background-image: none;
+    background-color: #ccc;
 }
 button.control-box {
     border: none;

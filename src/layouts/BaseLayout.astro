@@ -49,14 +49,13 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
       div.classic-window {
         width: 95%;
         max-width: 1000px;
-        margin: 64px auto 40px auto; /* 24px for menu bar + 40px top gap, 40px bottom gap */
-        /* Inner scrolling updates */
-        height: calc(100vh - 104px);
+        margin: 24px auto 0 auto; /* flush under 24px menu bar */
+        height: calc(100vh - 24px); /* fill to bottom of viewport */
         display: flex;
         flex-direction: column;
-        /* Use the font for the window frame but let global handle content */
         font-family: 'ChicagoFLF', sans-serif;
         transition: all 0.2s ease;
+        box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5); /* drop shadow */
       }
 
       div.classic-window.maximized {
@@ -64,6 +63,7 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
         max-width: none;
         height: calc(100vh - 24px);
         margin: 24px 0 0 0;
+        box-shadow: none; /* no shadow when maximized */
       }
 
       div.classic-window.shaded {
