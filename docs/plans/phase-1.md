@@ -31,6 +31,7 @@ DNS cutover, or bundle-size optimization beyond a measurement.
 | Repo location | Continue in this directory on a feature branch |
 | Content pipeline | Velite |
 | Phase 1 scope | Shell + placeholder posts + Vercel preview deploy |
+| GitHub repo visibility | Public (existing `rodmachen/code-rodmachen-com`) |
 
 ### Decisions deferred to Phase 2
 
@@ -54,57 +55,148 @@ These are **not** Phase 1 blockers but should be revisited before public launch.
 
 ---
 
-## Pre-flight (must complete before Step 1)
+## Roles and workflow
 
-- Confirm `git status` is clean and `main` is checked out.
-- Create feature branch: `git checkout -b feature/classicy-phase-1`.
-- Per global workflow rules: ask the user whether the rewrite should live
-  in a public or private GitHub repo. The current repo
-  (`rodmachen/code-rodmachen-com`) is presumably public — confirm before
-  pushing.
-- After Step 1's first commit lands on the branch, open a PR titled
-  "Phase 1: Next.js + Classicy visual foundation" with this plan as the
-  description checklist.
+Phase 1 is executed collaboratively by Opus, Gemini 3.1 Pro, and the user.
+Each role has a well-defined lane.
+
+**Opus (Claude Code, this agent):**
+- Owns this plan document and keeps it current
+- Writes the Gemini prompts for each Gemini-eligible step
+- **Executes Steps 3 and 5 directly** (framework spike and Model A shell)
+- **Reviews Gemini's output** for every Gemini-executed step: reads the
+  diff, re-runs the verification commands locally, and catches drift
+  between "works on Gemini's machine" and "works here"
+- **Owns all git actions** — stage, commit, push, open/update the PR
+- Interprets the bundle numbers Gemini produces in Step 7
+
+**Gemini 3.1 Pro:**
+- Executes mechanical scaffolding and implementation work for Steps
+  1, 2, 4, 6, and the mechanical half of Step 7
+- Reads this plan file as its source of truth for each step
+- Produces files and pastes verification command output
+- **Does not touch git.** No staging, no commits, no pushes. Just writes
+  files and reports what ran
+
+**User (Rod):**
+- Switches the active model in Claude Code between Opus-owned steps
+  (3, 5) and Gemini-executed steps (1, 2, 4, 6, 7-mechanical)
+- Runs the Gemini prompts in a separate Gemini session
+- Pastes Gemini's reply back into Claude Code so Opus can review and commit
+- Performs the one-time Vercel project setup in Step 7
+- Reviews and merges the PR
+
+**Verification policy:** Gemini runs the per-step verification commands
+and pastes the output. Opus then re-runs the same commands locally before
+staging and committing. This is deliberate redundancy — it catches
+environment drift, stale lockfiles, and "passed on paste, fails on pull"
+surprises that would otherwise show up in CI.
 
 ---
 
-## Step 1 — Scaffold Next.js + TypeScript project
+## Pre-flight ✅ done
 
-**Model:** Sonnet · **Gemini-eligible:** yes (mechanical scaffold)
+- `git status` clean, `main` checked out
+- Feature branch created: `feature/classicy-phase-1`
+- Repo confirmed public (`rodmachen/code-rodmachen-com`)
+- PR #4 opened against `main` after Step 1 landed
+
+---
+
+## Step 1 — Scaffold Next.js + TypeScript project ✅ complete
+
+**Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** tests-alongside (no behavior to TDD here)
+**Status:** ✅ Complete. Commits `8f93c1f` (Gemini), `459eabc` (docs), `c38305a` (gitignore fix). PR #4.
 
-Scaffold a Next.js App Router project at the repo root. The current repo
-contains only `docs/` and `.gitignore`, so the scaffold can be added in
-place without conflict.
+Scaffolded a Next.js App Router project at the repo root. The repo
+contained only `docs/` and `.gitignore`, so the scaffold was added in place.
 
 Files created/modified:
-- `package.json` — `next@latest`, `react@^18`, `react-dom@^18`,
-  `typescript`, `@types/react`, `@types/node`. Pin `classicy@0.6.54`
-  exactly (no caret) but **do not import it yet** — that's Step 3.
-- `tsconfig.json` — Next.js defaults
-- `next.config.mjs` — start with defaults; **do not** set `output: 'export'`
-  yet. Static export is a Phase 2 decision; Vercel preview deploys work
-  fine with the default SSR build and that gives us a fallback if Classicy
-  turns out to need a server runtime.
-- `app/layout.tsx` — minimal HTML shell with `<html><body>{children}</body></html>`
-- `app/page.tsx` — placeholder "hello" page
-- `.gitignore` — extend the existing one with `.next/`, `out/`, `node_modules/`
-- `README.md` — one paragraph describing the project (delete the Astro-era
-  framing if any remains)
+- `package.json` — `next@latest` (resolved to 16.2.3), `react@^18`,
+  `react-dom@^18`, `typescript`, `@types/react`, `@types/node`.
+  `classicy@0.6.54` pinned exactly, **not imported yet** — Step 3 does that.
+- `tsconfig.json` — Next.js App Router defaults, strict mode on
+- `next.config.mjs` — empty config. **No `output: 'export'`** — deferred to Phase 2
+- `app/layout.tsx` — minimal HTML shell with metadata exported
+- `app/page.tsx` — renders `<h1>Hello, Classicy</h1>`
+- `.gitignore` — extended with `.next/`, `out/`, `*.tsbuildinfo`
+- `README.md` — one paragraph linking to this plan
 
-**Verify:**
-- `npm install` completes without peer-dep warnings on React/Classicy
-- `npm run dev` serves the placeholder page at http://localhost:3000
-- `npm run build` succeeds
-- `npx tsc --noEmit` passes
+**Verified:** `npm install` clean, `npm run dev` served "Hello, Classicy",
+`npm run build` succeeded, `npx tsc --noEmit` passed.
 
-**Commit message:** `Step 1: scaffold Next.js + TypeScript project`
+**Known follow-up for Step 2:** pin `next` to an exact version instead of
+`"latest"`. Lockfile makes current builds reproducible but a fresh clone
+could resolve to a newer major.
+
+### Gemini prompt
+
+> You are executing **Step 1** of the Phase 1 plan for `code.rodmachen.com`,
+> a personal blog being rebuilt on Next.js + Classicy (a React framework
+> that renders a Mac OS 8 Platinum desktop in the browser).
+>
+> **Read `docs/plans/phase-1.md` for full context**, but your scope in this
+> turn is **Step 1 only** — "Scaffold Next.js + TypeScript project." Do not
+> touch Steps 2–7.
+>
+> **Starting state:** working directory `/Users/rodmachen/code/code-rodmachen-com`.
+> It contains only `docs/`, `.gitignore`, and `.claude/`. Current branch is `main`.
+>
+> **Pre-flight:**
+> 1. Verify `git status` is clean.
+> 2. Create and check out a new branch: `git checkout -b feature/classicy-phase-1`.
+>
+> **Deliverables** (create exactly these files; do not add others):
+> - `package.json` — Next.js App Router project. Dependencies: `next`
+>   (latest stable), `react@^18`, `react-dom@^18`. Dev dependencies:
+>   `typescript`, `@types/react`, `@types/node`. Also add `classicy` pinned
+>   to **exactly `0.6.54`** (no caret, no tilde) in `dependencies`, but do
+>   **not** import it anywhere yet — Step 3 wires it up. Scripts: `dev`,
+>   `build`, `start`, `lint` (can be a placeholder `echo` for now; real
+>   lint comes in Step 2).
+> - `tsconfig.json` — Next.js App Router defaults (strict mode on).
+> - `next.config.mjs` — default export of an empty config object. **Do NOT
+>   set `output: 'export'`** — deferred to Phase 2.
+> - `app/layout.tsx` — minimal root layout: `<html lang="en"><body>{children}</body></html>`,
+>   with `metadata` exporting title "code.rodmachen.com" and description
+>   "Tech and code writing by Rod Machen."
+> - `app/page.tsx` — placeholder home page that renders
+>   `<h1>Hello, Classicy</h1>`. Server component (no `"use client"`).
+> - `.gitignore` — **extend the existing file** (don't overwrite) by adding
+>   `.next/`, `out/`, `*.tsbuildinfo`, and `node_modules/` if missing.
+>   Leave all existing entries intact.
+> - `README.md` — one short paragraph: this is code.rodmachen.com, a
+>   personal tech blog being rebuilt on Next.js + Classicy. Link to
+>   `docs/plans/phase-1.md`.
+>
+> **Do NOT create:** any `tests/` directory, any `.github/workflows/` file,
+> any ESLint/Prettier config, any Classicy component, any `velite.config.ts`,
+> any `content/` directory, any `vercel.json`.
+>
+> **Verification** — all must pass before reporting back:
+> 1. `npm install` — zero peer-dep warnings on React or Classicy. If
+>    Classicy warns about React 19 vs 18, stop and report back.
+> 2. `npm run dev` — serves the placeholder page at http://localhost:3000
+>    showing "Hello, Classicy". Stop the dev server after confirming.
+> 3. `npm run build` — succeeds.
+> 4. `npx tsc --noEmit` — passes with no errors.
+>
+> **Do not commit and do not push.** Claude Opus will review the diff and
+> handle all git actions. When done, reply with:
+> (1) the list of files created/modified,
+> (2) the four verification command outputs (last 20 lines of each),
+> (3) any warnings or surprises.
+>
+> **If any verification step fails, stop immediately** and report what
+> broke with the exact error output. Do not attempt creative fixes — Opus
+> will diagnose.
 
 ---
 
 ## Step 2 — CI + test framework
 
-**Model:** Sonnet · **Gemini-eligible:** yes (mechanical config)
+**Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** tests-alongside
 
 Per global workflow rules, the project lacks a test framework, so this
@@ -113,33 +205,100 @@ implementation) of the old repo's Playwright suite per pre-plan §5.7.
 
 Files created/modified:
 - `package.json` — add `@playwright/test`, `vitest`, `eslint`,
-  `eslint-config-next`, `prettier` as dev deps
+  `eslint-config-next`, `prettier` as dev deps. Also pin `next` to the
+  exact version from Step 1 (replace `"latest"`).
 - `playwright.config.ts` — single Chromium project, baseURL
   `http://localhost:3000`, `webServer` runs `npm run dev`
-- `tests/e2e/smoke.spec.ts` — one test that loads `/` and asserts the page
-  has a `<body>` and zero console errors. This is a placeholder that real
-  steps will replace.
+- `tests/e2e/smoke.spec.ts` — loads `/`, asserts "Hello, Classicy" is
+  present, asserts zero console errors. Placeholder to be replaced.
 - `vitest.config.ts` — minimal config for unit tests of content transforms
-  later
 - `.github/workflows/ci.yml` — Node 20, `npm ci`, `npx tsc --noEmit`,
-  `npm run lint`, `npm run build`, `npx playwright install --with-deps chromium`,
-  `npx playwright test`. **Do not** add `@astrojs/check` — that bug bit the
-  old repo (pre-plan §4 last bullet) and this project must not inherit it.
+  `npm run lint`, `npm run build`,
+  `npx playwright install --with-deps chromium`, `npm run test:e2e`.
+  **Do not** add `@astrojs/check` — that bug bit the old repo (pre-plan
+  §4 last bullet) and this project must not inherit it.
 - `.eslintrc.json` and `.prettierrc` — minimal sane defaults
 
 **Verify:**
 - `npm run lint` passes
 - `npx tsc --noEmit` passes
+- `npm run build` still succeeds
 - `npx playwright test` passes locally (the one smoke test)
 - Push branch; GitHub Actions CI run is green on the PR
 
-**Commit message:** `Step 2: add Playwright + Vitest + GitHub Actions CI`
+**Commit message (Opus writes, not Gemini):** `Step 2: add Playwright + Vitest + GitHub Actions CI`
+
+### Gemini prompt
+
+> You are executing **Step 2** of the Phase 1 plan for `code.rodmachen.com`.
+> Read `docs/plans/phase-1.md` for full context. Your scope in this turn
+> is **Step 2 only** — "CI + test framework."
+>
+> **Starting state:** branch `feature/classicy-phase-1` is checked out.
+> Step 1 (Next.js + TypeScript scaffold) has already landed.
+> `app/layout.tsx` and `app/page.tsx` exist and render "Hello, Classicy."
+>
+> **Pre-flight:**
+> 1. Verify `git status` is clean.
+> 2. Verify you are on `feature/classicy-phase-1`.
+> 3. Verify `npm run build` still succeeds before changing anything.
+>
+> **Deliverables:**
+>
+> Edit `package.json`:
+> - Add devDependencies (pin exact versions from each package's latest, no caret):
+>   `@playwright/test`, `vitest`, `eslint`, `eslint-config-next`, `prettier`.
+> - **Pin `next` to the exact version that Step 1 resolved to.** Check
+>   `package-lock.json` for the installed `next` version and replace
+>   `"latest"` in `dependencies` with that exact number (no caret).
+> - Replace the placeholder `lint` script with `"lint": "next lint"`.
+> - Add `"test": "vitest run"` and `"test:e2e": "playwright test"`.
+>
+> Create:
+> - `playwright.config.ts` — single Chromium project, baseURL
+>   `http://localhost:3000`, `webServer` runs `npm run dev` and reuses an
+>   existing server if one is already up.
+> - `tests/e2e/smoke.spec.ts` — one test: navigate to `/`, assert the page
+>   contains "Hello, Classicy", assert zero console errors via
+>   `page.on('console', ...)`. This test exists only to prove the pipeline
+>   works; Steps 3, 5, and 6 replace it with real assertions.
+> - `vitest.config.ts` — minimal config; test files under
+>   `tests/unit/**/*.test.ts`.
+> - `.eslintrc.json` — extends `next/core-web-vitals`.
+> - `.prettierrc` — minimal: single quotes, trailing commas, 2-space indent,
+>   80-char print width.
+> - `.github/workflows/ci.yml` — triggered on `push` and `pull_request`.
+>   Single job, `ubuntu-latest`, Node 20. Steps: `actions/checkout@v4`,
+>   `actions/setup-node@v4` with Node 20 and `npm` cache, `npm ci`,
+>   `npx tsc --noEmit`, `npm run lint`, `npm run build`,
+>   `npx playwright install --with-deps chromium`, `npm run test:e2e`.
+>   **Do NOT add `@astrojs/check`** — that bug bit the old repo.
+>
+> **Do NOT create or modify:** any Classicy component (Step 3), any
+> Velite config or content file (Step 4), any blog UI component (Step 5).
+>
+> **Verification** — all must pass:
+> 1. `npm install` — clean
+> 2. `npx tsc --noEmit` — passes
+> 3. `npm run lint` — passes (warnings acceptable; report them)
+> 4. `npm run build` — still succeeds
+> 5. `npx playwright install --with-deps chromium` — succeeds
+> 6. `npm run test:e2e` — the smoke test passes
+> 7. `npm run test` — vitest runs ("no test files found" is acceptable)
+>
+> **Do not commit and do not push.** Reply with:
+> (1) files created/modified,
+> (2) verification outputs (last 20 lines each),
+> (3) the exact Next.js version you pinned (from `package-lock.json`),
+> (4) any warnings.
+>
+> **If any verification fails, stop and report.**
 
 ---
 
 ## Step 3 — Classicy spike: prove SSR/client boundary works
 
-**Model:** Opus · **Gemini-eligible:** no (architectural risk + framework interop)
+**Executor:** Opus · **Reviewer:** Opus (self)
 **Test posture:** tests-alongside (smoke test confirms render)
 
 This is the de-risking step. Classicy's example app is Vite-based and the
@@ -187,33 +346,21 @@ what broke, and bring it back to the user before proceeding to Step 4.
 
 ## Step 4 — Velite content pipeline + 2 placeholder posts
 
-**Model:** Sonnet · **Gemini-eligible:** yes (well-trodden integration)
-**Test posture:** TDD-lite — write a Vitest unit test asserting the
-generated content index has length 2 and the expected slugs, *then* add
-the posts.
+**Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
+**Test posture:** TDD-lite — write a failing Vitest test asserting the
+generated content index has length 2 with expected slugs, *then* add
+the config and posts.
 
 Files created/modified:
 - `package.json` — add `velite` as a dev dep
-- `velite.config.ts` — define a `posts` collection. Schema (simplified
-  from project-brief.md §"Content schema"):
-  ```ts
-  {
-    title: s.string(),
-    subTitle: s.string().optional(),
-    date: s.isodate(),
-    tags: s.array(s.string()).default([]),
-    slug: s.slug('posts'),
-    body: s.markdown(),
-  }
-  ```
-  Output to `.velite/` (gitignored). No Cloudinary remark plugin yet —
-  Phase 2.
+- `velite.config.ts` — define a `posts` collection with a schema
+  (title, subTitle?, date, tags[], slug, body). Output to `.velite/`
+  (gitignored). No Cloudinary remark plugin yet — Phase 2.
 - `next.config.mjs` — wrap with the Velite Next.js plugin so `velite`
   runs on `next dev` / `next build`
-- `content/posts/hello-classicy.md` — placeholder #1, written to exercise
-  multiple heading levels, a code block, an inline `code` snippet, a
-  blockquote, and a list. Use `docs/code-template.md` as a starting point
-  but **strip the Astro-specific `layout:` frontmatter line**.
+- `content/posts/hello-classicy.md` — placeholder #1, exercising multiple
+  heading levels, a code block, an inline `code` snippet, a blockquote,
+  and a list
 - `content/posts/typography-test.md` — placeholder #2, focused on
   typography stress (long paragraphs, h1–h4, ordered list, table)
 - `tests/unit/content.test.ts` — Vitest test asserting the Velite output
@@ -221,22 +368,115 @@ Files created/modified:
 - `.gitignore` — add `.velite/`
 
 **Verify:**
-- `npx velite` (or `npm run dev` which triggers it) produces `.velite/`
-  with both posts
+- `npx velite` (or `npm run dev`) produces `.velite/` with both posts
 - `npx vitest run` passes
 - `npx tsc --noEmit` passes (Velite generates types)
+- `npm run build` succeeds
 
 **Commit message:** `Step 4: add Velite content pipeline and two placeholder posts`
+
+### Gemini prompt
+
+> You are executing **Step 4** of the Phase 1 plan for `code.rodmachen.com`.
+> Read `docs/plans/phase-1.md` for full context. Your scope is
+> **Step 4 only** — "Velite content pipeline + 2 placeholder posts."
+>
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1 (scaffold),
+> 2 (CI + tests), and 3 (Classicy spike) have landed.
+> `app/components/ClassicyShell.tsx` exists as the client boundary. Do
+> not modify it in this step.
+>
+> **Test posture:** TDD-lite. Write the failing Vitest test **before** the
+> config and posts. The test asserts the generated content index has the
+> expected shape; implementing the config + posts makes it pass.
+>
+> **Pre-flight:**
+> 1. `git status` clean, on `feature/classicy-phase-1`
+> 2. `npm run build` and `npm run test:e2e` still succeed
+>
+> **Deliverables (in this order):**
+>
+> 1. Add to `package.json` devDependencies: `velite` pinned to its current
+>    latest version (check `npm view velite version`, no caret).
+>
+> 2. `tests/unit/content.test.ts` — Vitest test that imports from the
+>    Velite output (check Velite docs for the default output path) and
+>    asserts:
+>    - `posts` is an array of length 2
+>    - contains a post with slug `hello-classicy` and title "Hello, Classicy"
+>    - contains a post with slug `typography-test` and title "Typography Test"
+>    - both posts have a `body` (HTML string) and a `date` field
+>    Run `npm run test` to confirm it **fails** before proceeding.
+>
+> 3. `velite.config.ts` at repo root. Define a `posts` collection reading
+>    from `content/posts/**/*.md`. Schema (use Velite's `s` builder):
+>    ```ts
+>    {
+>      title: s.string(),
+>      subTitle: s.string().optional(),
+>      date: s.isodate(),
+>      tags: s.array(s.string()).default([]),
+>      slug: s.slug('posts'),
+>      body: s.markdown(),
+>    }
+>    ```
+>    Output to `.velite/` (default). **Do not** add any Cloudinary remark
+>    plugin — that's Phase 2.
+>
+> 4. Wrap `next.config.mjs` with Velite's Next.js plugin so `velite` runs
+>    during `next dev` and `next build`. See Velite docs for the exact API.
+>
+> 5. `content/posts/hello-classicy.md` — frontmatter:
+>    ```
+>    ---
+>    title: Hello, Classicy
+>    subTitle: First post on the rebuild
+>    date: 2026-04-10
+>    tags: [meta, classicy]
+>    ---
+>    ```
+>    Body: opening paragraph, `## h2`, `### h3`, fenced TypeScript code
+>    block (3–4 lines), inline `code`, blockquote, unordered list.
+>    `docs/code-template.md` is inspiration but **strip the Astro-specific
+>    `layout:` and `accentColor:` frontmatter** — they don't apply here.
+>
+> 6. `content/posts/typography-test.md` — frontmatter:
+>    ```
+>    ---
+>    title: Typography Test
+>    date: 2026-04-09
+>    tags: [meta]
+>    ---
+>    ```
+>    Body stress-tests typography: long paragraph, `h1`–`h4`, ordered list,
+>    unordered list, a 3-row table, a second longer fenced code block.
+>
+> 7. Extend `.gitignore` with `.velite/`.
+>
+> **Verification:**
+> 1. `npx velite` (or `npm run dev` briefly) produces `.velite/` with both
+>    posts indexed
+> 2. `npm run test` — the content.test.ts you wrote now passes
+> 3. `npx tsc --noEmit` — passes
+> 4. `npm run build` — succeeds
+> 5. `npm run test:e2e` — smoke test still passes
+>
+> **Do not commit and do not push.** Reply with:
+> (1) files created/modified,
+> (2) test output showing the content test went from failing to passing,
+> (3) verification outputs,
+> (4) any Velite plugin/API surprises worth noting.
 
 ---
 
 ## Step 5 — Model A blog window: sidebar + reading pane
 
-**Model:** Opus · **Gemini-eligible:** no (this is the design step that
-sets the visual identity for everything that follows)
+**Executor:** Opus · **Reviewer:** Opus (self)
 **Test posture:** tests-alongside (Playwright e2e drives the assertions)
 
 Build the actual Model A blog UI inside the Classicy shell from Step 3.
+This is the design step that sets the visual identity for everything that
+follows — Opus owns it directly.
 
 Files created/modified:
 - `app/components/BlogWindow.tsx` — `"use client"`. A `ClassicyApp` wrapping
@@ -277,8 +517,7 @@ Files created/modified:
 
 ## Step 6 — Typography and code-block styling inside the reading pane
 
-**Model:** Sonnet · **Gemini-eligible:** yes (styling work, well-bounded
-once Step 5 has set the structure)
+**Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** tests-alongside (one Playwright assertion per element)
 
 The reading pane needs to look like long-form writing inside a Mac OS 8
@@ -287,28 +526,16 @@ Phase 1 styling work, applied to the Classicy reading pane instead of an
 Astro layout.
 
 Files created/modified:
-- `app/components/PostBody.tsx` — wrap the rendered HTML in a `.post-body`
+- `app/components/PostBody.tsx` — wrap the rendered HTML in a `.postBody`
   class that scopes all styles below
-- `app/components/post-body.module.css` (or equivalent) — style:
-  - Body text: readable serif or system font, comfortable measure
-    (~65ch max-width inside the reading pane)
-  - Headings: era-appropriate (Chicago-ish for h1, system for h2–h4 — but
-    only if a free font is available; otherwise system stack)
-  - Code blocks: monospace, light background, padding, horizontal scroll
-    on overflow
-  - Inline code: subtle background, slightly tighter padding
-  - Blockquote: left border accent, italic, indented
-  - Lists, tables, links — brief but deliberate
+- `app/components/post-body.module.css` — style body text, headings, code
+  blocks, inline code, blockquotes, lists, tables, links
 - `velite.config.ts` — enable Velite's built-in Shiki integration for
-  syntax highlighting (it ships with `@shikijs/transformers` support).
-  Pick one light theme matching the Platinum aesthetic
-  (e.g. `github-light` or `solarized-light`).
-- `tests/e2e/typography.spec.ts`:
-  - The `typography-test` post renders an `<h1>`, `<h2>`, `<pre><code>`,
-    `<blockquote>`, `<table>`
-  - The code block has a non-default background color (Shiki applied)
-  - No element overflows the reading pane horizontally at the default
-    window size
+  syntax highlighting. Pick one light theme matching the Platinum aesthetic
+  (`github-light` or `solarized-light`)
+- `tests/e2e/typography.spec.ts` — renders `h1`, `h2`, `<pre><code>`,
+  `<blockquote>`, `<table>`; code block has Shiki-applied color; no
+  horizontal overflow at default window size
 
 **Verify:**
 - All typography.spec.ts assertions pass
@@ -317,14 +544,83 @@ Files created/modified:
 
 **Commit message:** `Step 6: typography and code-block styling for the reading pane`
 
+### Gemini prompt
+
+> You are executing **Step 6** of the Phase 1 plan for `code.rodmachen.com`.
+> Read `docs/plans/phase-1.md` for full context. Your scope is
+> **Step 6 only** — "Typography and code-block styling inside the reading
+> pane."
+>
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–5 have
+> landed. The Model A blog window exists at `app/components/BlogWindow.tsx`
+> and the reading pane renders post HTML via `app/components/PostBody.tsx`.
+> **Read both files before starting** — understanding the existing
+> structure is the whole game.
+>
+> **Pre-flight:**
+> 1. `git status` clean, on `feature/classicy-phase-1`
+> 2. `npm run build` succeeds
+> 3. `npm run test:e2e` passes
+>
+> **Deliverables:**
+>
+> 1. `app/components/post-body.module.css` — scoped styles keyed off a
+>    `.postBody` wrapper. Style:
+>    - **Body text:** readable serif stack (Charter, Georgia, serif) or
+>      system stack — pick based on what looks right inside the Classicy
+>      window. Line-height ~1.6, max-width ~65ch inside the reading pane.
+>    - **Headings:** era-appropriate hierarchy. h1 slightly larger and
+>      bolder; h2–h4 step down cleanly. System stack unless you find a
+>      free Chicago-alike worth the cost.
+>    - **Code blocks:** monospace, light background, padding, horizontal
+>      scroll on overflow. Must not visually fight the Mac OS 8 window
+>      chrome.
+>    - **Inline code:** subtle background, slightly tighter padding,
+>      monospace.
+>    - **Blockquote:** left border accent, italic, indented.
+>    - **Lists, tables, links:** brief but deliberate styling. Links need
+>      a visible hover state.
+>
+> 2. Update `app/components/PostBody.tsx` to apply the `.postBody`
+>    className wrapper around the rendered HTML.
+>
+> 3. Update `velite.config.ts` to enable Shiki syntax highlighting for
+>    fenced code blocks. Velite integrates with `@shikijs/transformers`
+>    via its markdown options — see Velite docs. Pick a single light theme
+>    that harmonizes with Platinum (`github-light` or `solarized-light`).
+>    Add any new Shiki dependencies to `package.json` with pinned versions.
+>
+> 4. `tests/e2e/typography.spec.ts` — Playwright test that:
+>    - Navigates to `/posts/typography-test`
+>    - Asserts `<h1>`, `<h2>`, `<pre><code>`, `<blockquote>`, and `<table>`
+>      elements are present inside `.postBody`
+>    - Asserts at least one `<pre>` has inline color styles (evidence that
+>      Shiki ran) — `expect(style).toContain('color')` or similar
+>    - Asserts no horizontal overflow at default window size (compare
+>      `scrollWidth` vs `clientWidth` on the reading pane container)
+>    - Asserts zero console errors during load
+>
+> **Do NOT touch:** Classicy components, the blog window sidebar logic,
+> Velite schema, post content files. This step is purely visual + a new test.
+>
+> **Verification:**
+> 1. `npm run build` succeeds
+> 2. `npm run test:e2e` — all existing tests still pass AND the new
+>    typography.spec.ts passes
+> 3. `npx tsc --noEmit` passes
+> 4. `npm run lint` passes
+>
+> **Do not commit or push.** Reply with:
+> (1) files created/modified,
+> (2) verification output,
+> (3) a note on which fonts you picked and why,
+> (4) any visual issue you noticed but chose not to fix (Opus will triage).
+
 ---
 
 ## Step 7 — Vercel preview deploy + bundle measurement
 
-**Model:** Sonnet · **Gemini-eligible:** partially — Gemini can run the
-deploy commands and paste the bundle numbers; the **interpretation** of
-those numbers (is this acceptable? what does the budget look like?) should
-stay with Claude/the user.
+**Executor:** Gemini 3.1 Pro (mechanical) + Opus (interpret) · **Reviewer:** Opus
 **Test posture:** tests-alongside
 
 Phase 1's exit criterion is a working preview URL. Per pre-plan §5.8, do
@@ -334,31 +630,98 @@ Files created/modified:
 - `package.json` — add `@next/bundle-analyzer` as a dev dep, add
   `npm run analyze` script
 - `next.config.mjs` — wire the analyzer behind `ANALYZE=true`
-- `vercel.json` — only if needed (Vercel auto-detects Next.js, so most
-  likely no file at all)
 - PR description — record:
   - The Vercel preview URL
   - First-load JS size (kB) for `/` and `/posts/[slug]` from the build output
-  - The bundle analyzer screenshot or top-10 chunk list
+  - The bundle analyzer top-10 chunk list
   - Any console errors or warnings in the deployed preview
 
-**Vercel project setup (one-time, requires user action — Claude should NOT
-do this autonomously):**
+**Vercel project setup (user action, not Gemini, not Opus):**
 - User connects the GitHub repo to a new Vercel project named
   `code-rodmachen-com-classicy` (distinct from any existing
   `code-rodmachen-com` project so the production domain is unaffected)
 - User confirms the framework preset is "Next.js"
 - User does **not** assign a custom domain in this phase
 
+**Opus-only interpretation:**
+- Read the bundle numbers Gemini reports and judge whether they're in the
+  expected range per pre-plan §5.2 (rough expectation: 500KB+ gzipped JS).
+- If first-load JS for any route exceeds ~1MB gzipped, flag it in the PR
+  description and recommend a lazy-loading pass before Phase 2.
+
 **Verify:**
 - Push the branch; the Vercel GitHub integration produces a preview URL
 - Visit the preview URL: home page loads, both posts render, sidebar
   navigation works, no console errors
 - `ANALYZE=true npm run build` produces the bundle report
-- All Playwright tests pass on `npm run start` against the production build
-  (not just dev)
+- All Playwright tests pass against `npm run start` (production build, not dev)
 
 **Commit message:** `Step 7: Vercel preview deploy and bundle measurement`
+
+### Gemini prompt (mechanical half only — Opus interprets the numbers)
+
+> You are executing the **mechanical half of Step 7** of the Phase 1 plan
+> for `code.rodmachen.com`. Read `docs/plans/phase-1.md` for full context.
+> Your scope is **bundle analysis and measurement only** — the Vercel
+> project setup and the decision about whether the bundle numbers are
+> acceptable are not your call.
+>
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–6 have
+> landed. The full Phase 1 UI is working locally.
+>
+> **Deliverables:**
+>
+> 1. Add to `package.json` devDependencies: `@next/bundle-analyzer`
+>    (pinned exact version).
+>
+> 2. Update `next.config.mjs` to conditionally wrap the config with the
+>    analyzer when the `ANALYZE` env var is truthy. **Preserve any existing
+>    Velite plugin wrapping** from Step 4. Pattern:
+>    ```js
+>    import bundleAnalyzer from '@next/bundle-analyzer';
+>    const withAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
+>    export default withAnalyzer(withVelite(nextConfig));
+>    ```
+>    Adjust to match whatever wrappers are already present.
+>
+> 3. Add an `analyze` script to `package.json`:
+>    `"analyze": "ANALYZE=true next build"`.
+>
+> **Measurement runs:**
+>
+> 1. Run `npm run build` and capture the full output, especially the
+>    "Route (app)" table. Record exact kB numbers for:
+>    - `/` (home page)
+>    - `/posts/[slug]` (dynamic post route)
+>    - `First Load JS shared by all` (the shared baseline)
+>
+> 2. Run `npm run analyze` — produces bundle analyzer HTML reports at
+>    `.next/analyze/*.html`. Report file sizes via
+>    `ls -lh .next/analyze/` and, if possible, grep the HTML for the top
+>    chunk names by size.
+>
+> 3. Run the e2e suite against a **production build**, not dev:
+>    - `npm run build`
+>    - Start `npm run start` in the background
+>    - Wait a few seconds for it to be ready
+>    - `npm run test:e2e`
+>    - Kill the background server
+>    - Report whether tests passed under `next start`
+>
+> **Do not commit or push.** Reply with:
+> (1) files created/modified,
+> (2) **exact First Load JS numbers** for each route (verbatim from the
+> build output),
+> (3) top-10 chunk list or report file sizes,
+> (4) whether the production build test run passed,
+> (5) any runtime warnings.
+>
+> **Do not interpret the numbers** or claim anything about acceptability —
+> that's Opus's job. Just paste the numbers.
+>
+> **Vercel deploy setup is NOT your job.** The user creates the new Vercel
+> project (`code-rodmachen-com-classicy`) manually from the GitHub repo.
+> Do not run any `vercel` CLI commands or touch Vercel configuration.
 
 ---
 
@@ -385,29 +748,24 @@ DNS cutover.
 
 ---
 
-## Model assignment summary (to plan model switches)
+## Executor assignment summary
 
-| Step | Model | Gemini-eligible? |
+| Step | Executor | Reviewer & git owner |
 |---|---|---|
-| 1 — Scaffold Next.js | Sonnet | yes |
-| 2 — CI + tests | Sonnet | yes |
-| 3 — Classicy spike | **Opus** | no |
-| 4 — Velite + posts | Sonnet | yes |
-| 5 — Blog window | **Opus** | no |
-| 6 — Typography | Sonnet | yes |
-| 7 — Deploy + measure | Sonnet | partial |
+| 1 — Scaffold Next.js | Gemini 3.1 Pro | Opus |
+| 2 — CI + tests | Gemini 3.1 Pro | Opus |
+| 3 — Classicy spike | **Opus** | Opus |
+| 4 — Velite + posts | Gemini 3.1 Pro | Opus |
+| 5 — Blog window | **Opus** | Opus |
+| 6 — Typography | Gemini 3.1 Pro | Opus |
+| 7 — Deploy + measure | Gemini (mechanical) + Opus (interpret) | Opus |
 
-**Model switches happen between Step 2→3, 3→4, 4→5, and 5→6.** Per global
-workflow rules, stop and wait for the user to switch models at each
-boundary. Steps 1–2 and Steps 6–7 can run continuously without a switch.
-
-**Gemini delegation note:** Steps 1, 2, 4, and 6 are mechanical enough
-that they can be handed to Gemini 3.1 Pro to save Pro plan usage. The
-human-in-the-loop pattern: Claude (here) writes/owns the plan and the
-critical Steps 3 and 5; Gemini executes Steps 1, 2, 4, 6 against this plan
-file as its source of truth; Claude reviews the Gemini output before each
-commit lands. Step 7 is split — Gemini runs the deploy and reports
-numbers, Claude/user interprets them.
+**Model switches happen between Steps 2→3, 3→4, 4→5, 5→6, and 6→7.** At
+each switch the user stops and changes the active model in Claude Code,
+then runs the corresponding Gemini prompt (from the step's "Gemini prompt"
+subsection) in a separate Gemini session, then pastes Gemini's reply back
+into a Claude Code session for Opus to review and commit. Steps 3 and 5
+run entirely in Claude Code with Opus.
 
 ---
 
