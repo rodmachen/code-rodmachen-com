@@ -28,4 +28,4 @@ pnpm-debug.log*
 # Playwright
 test-results/
 playwright-report/
-tests/e2e/snapshots/
+# Note: tests/e2e/visual.spec.ts-snapshots/ is committed (baseline images)
