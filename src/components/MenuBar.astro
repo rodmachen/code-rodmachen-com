@@ -1,18 +1,65 @@
 ---
-// MenuBar component — classic Mac OS menu bar (static, no dropdowns yet)
+// MenuBar component — classic Mac OS 8 menu bar with functional dropdowns
 ---
 
-<nav class="classic-menu-bar" aria-label="Main Navigation">
+<nav class="classic-menu-bar" role="menubar" aria-label="Main Navigation">
   <div class="menu-items">
-    <span class="apple-logo">
-      <img src="/img/apple-logo.svg" alt="Apple Menu" width="14" height="17" />
-    </span>
-    <a href="/" class="menu-item active">File</a>
-    <span class="menu-item" aria-hidden="true">Edit</span>
-    <span class="menu-item" aria-hidden="true">View</span>
-    <span class="menu-item" aria-hidden="true">Special</span>
-    <span class="menu-item" aria-hidden="true">Help</span>
+    <!-- Apple menu -->
+    <div class="menu-group">
+      <button class="apple-logo menu-btn" data-menu="Apple" aria-haspopup="true" aria-expanded="false" aria-label="Apple Menu">
+        <img src="/img/apple-logo.svg" alt="" width="14" height="17" aria-hidden="true" />
+      </button>
+      <ul class="menu-dropdown" data-dropdown="Apple" role="menu" hidden>
+        <li role="none">
+          <button type="button" class="menu-dropdown-item" role="menuitem" data-modal="modal-about-site">About this site</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- File menu -->
+    <div class="menu-group">
+      <button class="menu-btn" data-menu="File" aria-haspopup="true" aria-expanded="false">File</button>
+      <ul class="menu-dropdown" data-dropdown="File" role="menu" hidden>
+        <li role="none">
+          <a href="/" class="menu-dropdown-item" role="menuitem">Home</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Edit menu -->
+    <div class="menu-group">
+      <button class="menu-btn" data-menu="Edit" aria-haspopup="true" aria-expanded="false">Edit</button>
+      <ul class="menu-dropdown" data-dropdown="Edit" role="menu" hidden>
+        <li role="none">
+          <button type="button" class="menu-dropdown-item menu-dropdown-item--disabled" role="menuitem" aria-disabled="true" tabindex="-1">Edit Posts</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- View menu -->
+    <div class="menu-group">
+      <button class="menu-btn" data-menu="View" aria-haspopup="true" aria-expanded="false">View</button>
+      <ul class="menu-dropdown" data-dropdown="View" role="menu" hidden>
+        <li role="none">
+          <button type="button" class="menu-dropdown-item" role="menuitemcheckbox" aria-checked="false" id="view-full-width">Full Width</button>
+        </li>
+        <li role="none">
+          <button type="button" class="menu-dropdown-item" role="menuitemcheckbox" aria-checked="true" id="view-normal">Normal</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Help menu -->
+    <div class="menu-group">
+      <button class="menu-btn" data-menu="Help" aria-haspopup="true" aria-expanded="false">Help</button>
+      <ul class="menu-dropdown" data-dropdown="Help" role="menu" hidden>
+        <li role="none">
+          <a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="menu-dropdown-item" role="menuitem">Help me…</a>
+        </li>
+      </ul>
+    </div>
   </div>
+
   <div class="menu-clock" id="menu-clock" aria-hidden="true">12:00 PM</div>
 </nav>
 
@@ -27,37 +74,125 @@
     border-bottom: 1px solid black;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 0 16px;
+    align-items: stretch;
+    padding: 0 8px;
     font-family: 'ChicagoFLF', sans-serif;
     font-size: 14px;
-    z-index: 100;
+    z-index: 200;
   }
   .menu-items {
     display: flex;
-    gap: 16px;
+    align-items: stretch;
   }
-  .menu-item {
+  .menu-group {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+  }
+  .menu-btn {
     cursor: default;
     padding: 0 6px;
     color: black;
-    text-decoration: none;
+    background: none;
+    border: none;
+    font-family: 'ChicagoFLF', sans-serif;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+    height: 100%;
   }
-  .menu-item.active,
-  .menu-item:hover,
-  .apple-logo:hover {
+  .menu-btn:hover,
+  .menu-btn.active {
     background-color: black;
     color: white;
   }
-  .apple-logo {
-    cursor: default;
-    padding: 0 6px;
-    font-size: 16px;
+  .menu-btn.active img,
+  .menu-btn:hover img {
+    filter: invert(1);
   }
+  .apple-logo {
+    padding: 0 8px;
+  }
+
+  /* Dropdown */
+  .menu-dropdown {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    min-width: 140px;
+    background: white;
+    border: 1px solid #000;
+    box-shadow: 1px 1px 0 #000;
+    list-style: none;
+    margin: 0;
+    padding: 2px 0;
+    font-family: 'ChicagoFLF', sans-serif;
+    font-size: 14px;
+    z-index: 300;
+  }
+  .menu-dropdown[hidden] {
+    display: none;
+  }
+  .menu-dropdown li {
+    margin: 0;
+    padding: 0;
+  }
+  .menu-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 2px 20px 2px 20px;
+    color: black;
+    background: none;
+    border: none;
+    font-family: 'ChicagoFLF', sans-serif;
+    font-size: 14px;
+    text-align: left;
+    text-decoration: none;
+    cursor: default;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+  .menu-dropdown-item:hover {
+    background: black;
+    color: white;
+  }
+  .menu-dropdown-item--disabled {
+    color: #999;
+    cursor: default;
+    pointer-events: none;
+  }
+  .menu-dropdown-item--disabled:hover {
+    background: none;
+    color: #999;
+  }
+  /* Checkmark for View items */
+  .menu-dropdown-item.checked::before {
+    content: '✓';
+    position: absolute;
+    left: 6px;
+  }
+  .menu-dropdown li {
+    position: relative;
+  }
+
   .menu-clock {
     cursor: default;
     font-family: 'ChicagoFLF', sans-serif;
     font-size: 14px;
-    line-height: 24px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  /* Era-accurate dotted focus ring */
+  .menu-btn:focus-visible {
+    outline: 1px dotted #000;
+    outline-offset: -2px;
+  }
+  .menu-dropdown-item:focus-visible {
+    outline: 1px dotted #000;
+    outline-offset: -1px;
   }
 </style>
