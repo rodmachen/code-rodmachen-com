@@ -75,9 +75,17 @@
     display: block;
     filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
   }
-  /* "Opened" state: icon grays out while its modal is open */
+  /* "Opened" state: icon gets the classic Mac OS dithered/stippled look
+     while its modal is open, via a 2x2 checker mask that hides every
+     other pixel — the same trick System 7/Mac OS 8 used for open-disk icons. */
   .desktop-icon.icon--open img {
-    filter: brightness(0.6) grayscale(0.7) drop-shadow(1px 1px 0px rgba(0,0,0,0.5));
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><rect width='1' height='1' fill='black'/><rect x='1' y='1' width='1' height='1' fill='black'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><rect width='1' height='1' fill='black'/><rect x='1' y='1' width='1' height='1' fill='black'/></svg>");
+    -webkit-mask-size: 2px 2px;
+    mask-size: 2px 2px;
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+    filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
   }
   .desktop-icon.icon--open {
     color: #ccc;
