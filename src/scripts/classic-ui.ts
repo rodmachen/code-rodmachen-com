@@ -127,6 +127,8 @@ export function openModal(id: string): void {
   modal.hidden = false;
   if (backdrop) backdrop.hidden = false;
   win?.classList.add('inactive');
+  // Gray out the desktop icon that triggered this modal
+  modalTrigger?.classList.add('icon--open');
   // Focus the close button (first focusable element in modal)
   const focusable = getFocusableElements(modal);
   focusable[0]?.focus();
@@ -162,7 +164,8 @@ export function closeModal(): void {
   const backdrop = document.getElementById('modal-backdrop');
   if (backdrop) backdrop.hidden = true;
   win?.classList.remove('inactive');
-  // Restore focus to trigger
+  // Restore icon appearance and focus
+  modalTrigger?.classList.remove('icon--open');
   modalTrigger?.focus();
   modalTrigger = null;
 }

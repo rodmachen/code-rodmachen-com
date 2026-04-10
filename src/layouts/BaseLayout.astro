@@ -49,8 +49,9 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
         margin: auto;
       }
 
-      /* Override classic.css defaults to make it fit a modern blog */
-      div.classic-window {
+      /* Override classic.css defaults to make it fit a modern blog.
+         Use #main-window (ID) to guarantee specificity over classic.css .content */
+      #main-window {
         width: 95%;
         max-width: 1000px;
         margin: 24px auto 0 auto; /* flush under 24px menu bar */
@@ -62,7 +63,7 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
         box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5); /* drop shadow */
       }
 
-      div.classic-window.maximized {
+      #main-window.maximized {
         width: 100%;
         max-width: none;
         height: calc(100vh - 24px);
@@ -70,7 +71,7 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
         box-shadow: none; /* no shadow when maximized */
       }
 
-      div.classic-window.shaded {
+      #main-window.shaded {
         height: auto;
       }
 

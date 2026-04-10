@@ -7,7 +7,7 @@
 <div class="desktop-icons">
   <!-- Archive: opens posts list window -->
   <button type="button" class="desktop-icon" data-modal="modal-archive" aria-label="Open Archive">
-    <img src="/img/icons/disk.svg" alt="" width="40" height="36" aria-hidden="true" />
+    <img src="/img/icons/disk.svg" alt="" width="40" height="30" aria-hidden="true" />
     <span>Archive</span>
   </button>
 
@@ -24,10 +24,14 @@
   </button>
 </div>
 
-<!-- Trash: fixed at bottom-right -->
-<div class="desktop-icon desktop-trash" aria-hidden="true">
-  <img src="/img/icons/trash.svg" alt="" width="32" height="40" />
-  <span>Trash</span>
+<!-- Trash: fixed at bottom-right using inline style so scoped CSS cannot interfere -->
+<div
+  style="position:fixed;bottom:20px;right:20px;z-index:50;display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;cursor:default;"
+  aria-hidden="true"
+>
+  <img src="/img/icons/trash.svg" alt="" width="32" height="40"
+    style="display:block;filter:drop-shadow(1px 1px 0px rgba(0,0,0,0.5));" />
+  <span style="color:white;font-family:Geneva,sans-serif;font-size:11px;text-align:center;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;">Trash</span>
 </div>
 
 <style>
@@ -56,7 +60,6 @@
     width: 64px;
     text-align: center;
     cursor: pointer;
-    /* reset button styles */
     background: none;
     border: none;
     padding: 2px;
@@ -72,18 +75,11 @@
     display: block;
     filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
   }
-  /* Trash: fixed at bottom-right, no hover effect */
-  .desktop-trash {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 50;
-    cursor: default;
+  /* "Opened" state: icon grays out while its modal is open */
+  .desktop-icon.icon--open img {
+    filter: brightness(0.6) grayscale(0.7) drop-shadow(1px 1px 0px rgba(0,0,0,0.5));
   }
-  .desktop-trash:hover {
-    color: white;
-  }
-  .desktop-trash:hover img {
-    filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
+  .desktop-icon.icon--open {
+    color: #ccc;
   }
 </style>
