@@ -194,10 +194,11 @@ could resolve to a newer major.
 
 ---
 
-## Step 2 — CI + test framework
+## Step 2 — CI + test framework ✅ complete
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** tests-alongside
+**Status:** ✅ Complete. Commit `d425bae`. Hit one snag (Next.js 16 removed `next lint`); Opus diagnosed and fixed during review. Plan/prompt below updated to prevent recurrence.
 
 Per global workflow rules, the project lacks a test framework, so this
 must be set up before any feature work. Mirrors the intent (not the
@@ -211,19 +212,34 @@ Files created/modified:
   `http://localhost:3000`, `webServer` runs `npm run dev`
 - `tests/e2e/smoke.spec.ts` — loads `/`, asserts "Hello, Classicy" is
   present, asserts zero console errors. Placeholder to be replaced.
-- `vitest.config.ts` — minimal config for unit tests of content transforms
+- `vitest.config.ts` — minimal config for unit tests of content transforms,
+  with `passWithNoTests: true` so it doesn't exit non-zero before Step 4
+  adds the first unit test
 - `.github/workflows/ci.yml` — Node 20, `npm ci`, `npx tsc --noEmit`,
   `npm run lint`, `npm run build`,
   `npx playwright install --with-deps chromium`, `npm run test:e2e`.
   **Do not** add `@astrojs/check` — that bug bit the old repo (pre-plan
   §4 last bullet) and this project must not inherit it.
-- `.eslintrc.json` and `.prettierrc` — minimal sane defaults
+- `eslint.config.mjs` — ESLint 9 flat config. **Not `.eslintrc.json`** —
+  Next.js 16 dropped the legacy lint pipeline and ESLint 9 uses flat
+  config by default. Imports from `eslint-config-next/core-web-vitals`,
+  which already covers `.js/.jsx/.mjs/.ts/.tsx`, includes TypeScript
+  support, and ignores `.next/**`, `out/**`, `build/**`, `next-env.d.ts`.
+  Add `.velite/**`, `test-results/**`, `playwright-report/**` to the
+  user `ignores` block.
+- `.prettierrc` — minimal sane defaults
+- `.gitignore` — add Playwright artifacts: `test-results/`,
+  `playwright-report/`, `playwright/.cache/`
+
+**Lint script:** `"lint": "eslint ."` (NOT `"next lint"` — that command
+was removed in Next.js 16).
 
 **Verify:**
-- `npm run lint` passes
+- `npm run lint` passes (using `eslint .` directly)
 - `npx tsc --noEmit` passes
 - `npm run build` still succeeds
 - `npx playwright test` passes locally (the one smoke test)
+- `npm run test` exits 0 even with no test files
 - Push branch; GitHub Actions CI run is green on the PR
 
 **Commit message (Opus writes, not Gemini):** `Step 2: add Playwright + Vitest + GitHub Actions CI`
@@ -245,13 +261,22 @@ Files created/modified:
 >
 > **Deliverables:**
 >
+> **Critical context for Next.js 16:** the built-in `next lint` command
+> was removed in Next.js 16. ESLint must be invoked directly. Also,
+> ESLint 9 uses flat config by default (`eslint.config.mjs`), not the
+> legacy `.eslintrc.json`. `eslint-config-next@16` ships native flat
+> config via `eslint-config-next/core-web-vitals` and already covers
+> `.js/.jsx/.mjs/.ts/.tsx`, TypeScript support, and global ignores for
+> `.next/**`, `out/**`, `build/**`, `next-env.d.ts`.
+>
 > Edit `package.json`:
 > - Add devDependencies (pin exact versions from each package's latest, no caret):
 >   `@playwright/test`, `vitest`, `eslint`, `eslint-config-next`, `prettier`.
 > - **Pin `next` to the exact version that Step 1 resolved to.** Check
 >   `package-lock.json` for the installed `next` version and replace
 >   `"latest"` in `dependencies` with that exact number (no caret).
-> - Replace the placeholder `lint` script with `"lint": "next lint"`.
+> - Replace the placeholder `lint` script with `"lint": "eslint ."`.
+>   **Do NOT use `"next lint"`** — removed in Next.js 16.
 > - Add `"test": "vitest run"` and `"test:e2e": "playwright test"`.
 >
 > Create:
@@ -263,8 +288,24 @@ Files created/modified:
 >   `page.on('console', ...)`. This test exists only to prove the pipeline
 >   works; Steps 3, 5, and 6 replace it with real assertions.
 > - `vitest.config.ts` — minimal config; test files under
->   `tests/unit/**/*.test.ts`.
-> - `.eslintrc.json` — extends `next/core-web-vitals`.
+>   `tests/unit/**/*.test.ts`. **Set `passWithNoTests: true`** so the
+>   suite exits 0 before Step 4 adds the first real unit test.
+> - `eslint.config.mjs` (NOT `.eslintrc.json`) — flat config:
+>   ```js
+>   import next from 'eslint-config-next/core-web-vitals';
+>
+>   const config = [
+>     ...next,
+>     {
+>       ignores: ['.velite/**', 'test-results/**', 'playwright-report/**'],
+>     },
+>   ];
+>
+>   export default config;
+>   ```
+>   The `const config` indirection is needed to avoid the
+>   `import/no-anonymous-default-export` warning that flat-config-next
+>   itself enables.
 > - `.prettierrc` — minimal: single quotes, trailing commas, 2-space indent,
 >   80-char print width.
 > - `.github/workflows/ci.yml` — triggered on `push` and `pull_request`.
@@ -273,6 +314,9 @@ Files created/modified:
 >   `npx tsc --noEmit`, `npm run lint`, `npm run build`,
 >   `npx playwright install --with-deps chromium`, `npm run test:e2e`.
 >   **Do NOT add `@astrojs/check`** — that bug bit the old repo.
+>
+> Extend `.gitignore` with Playwright artifacts:
+> `test-results/`, `playwright-report/`, `playwright/.cache/`.
 >
 > **Do NOT create or modify:** any Classicy component (Step 3), any
 > Velite config or content file (Step 4), any blog UI component (Step 5).
@@ -284,7 +328,8 @@ Files created/modified:
 > 4. `npm run build` — still succeeds
 > 5. `npx playwright install --with-deps chromium` — succeeds
 > 6. `npm run test:e2e` — the smoke test passes
-> 7. `npm run test` — vitest runs ("no test files found" is acceptable)
+> 7. `npm run test` — vitest runs and exits 0 ("no test files found" with
+>    `passWithNoTests` returns success)
 >
 > **Do not commit and do not push.** Reply with:
 > (1) files created/modified,
