@@ -5,9 +5,11 @@
 
 <!-- Main icon column (right side, below menu bar) -->
 <div class="desktop-icons">
-  <!-- Archive: opens posts list window -->
-  <button type="button" class="desktop-icon" data-modal="modal-archive" aria-label="Open Archive">
-    <img src="/img/icons/disk.svg" alt="" width="40" height="28" aria-hidden="true" />
+  <!-- Archive: opens posts list window. Two <img>s — closed + open state —
+       swapped via CSS when `.icon--open` is toggled by classic-ui.ts -->
+  <button type="button" class="desktop-icon desktop-icon--disk" data-modal="modal-archive" aria-label="Open Archive">
+    <img class="disk-closed" src="/img/icons/disk.svg" alt="" width="48" height="16" aria-hidden="true" />
+    <img class="disk-opened" src="/img/icons/disk-open.svg" alt="" width="48" height="16" aria-hidden="true" />
     <span>Archive</span>
   </button>
 
@@ -24,14 +26,10 @@
   </button>
 </div>
 
-<!-- Trash: fixed at bottom-right using inline style so scoped CSS cannot interfere -->
-<div
-  style="position:fixed;bottom:20px;right:20px;z-index:50;display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;cursor:default;"
-  aria-hidden="true"
->
-  <img src="/img/icons/trash.svg" alt="" width="40" height="46"
-    style="display:block;" />
-  <span style="color:white;font-family:Geneva,sans-serif;font-size:11px;text-align:center;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;">Trash</span>
+<!-- Trash: fixed at bottom-right, non-interactive (aria-hidden) -->
+<div class="desktop-trash" aria-hidden="true">
+  <img src="/img/icons/trash.svg" alt="" width="56" height="68" />
+  <span>Trash</span>
 </div>
 
 <style>
@@ -75,10 +73,21 @@
     display: block;
     filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
   }
-  /* "Opened" state: icon gets the classic Mac OS dithered/stippled look
-     while its modal is open, via a 2x2 checker mask that hides every
-     other pixel — the same trick System 7/Mac OS 8 used for open-disk icons. */
-  .desktop-icon.icon--open img {
+  /* Disk icon has two pieces of art — closed and opened (dithered).
+     Show closed by default; swap to opened when the modal is open. */
+  .desktop-icon--disk .disk-opened {
+    display: none;
+  }
+  .desktop-icon--disk.icon--open .disk-closed {
+    display: none;
+  }
+  .desktop-icon--disk.icon--open .disk-opened {
+    display: block;
+  }
+
+  /* Other desktop icons (without dedicated opened art) fall back to a
+     2×2 checker mask — the classic System 7/Mac OS 8 dither trick. */
+  .desktop-icon:not(.desktop-icon--disk).icon--open img {
     -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><rect width='1' height='1' fill='black'/><rect x='1' y='1' width='1' height='1' fill='black'/></svg>");
     mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><rect width='1' height='1' fill='black'/><rect x='1' y='1' width='1' height='1' fill='black'/></svg>");
     -webkit-mask-size: 2px 2px;
@@ -89,5 +98,32 @@
   }
   .desktop-icon.icon--open {
     color: #ccc;
+  }
+  .desktop-trash {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 64px;
+    cursor: default;
+  }
+  .desktop-trash img {
+    display: block;
+    filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
+  }
+  .desktop-trash span {
+    color: white;
+    font-family: 'Geneva', sans-serif;
+    font-size: 11px;
+    text-align: center;
+    text-shadow:
+      1px 1px 0 #000,
+      -1px -1px 0 #000,
+      1px -1px 0 #000,
+      -1px 1px 0 #000;
   }
 </style>

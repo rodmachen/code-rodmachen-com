@@ -76,11 +76,13 @@ test.describe('classic window', () => {
 
   test('desktop icon SVGs load', async ({ page }) => {
     await page.goto('/');
-    const iconImgs = page.locator('.desktop-icons img');
-    const count = await iconImgs.count();
+    const buttons = page.locator('.desktop-icon');
+    const count = await buttons.count();
     expect(count).toBe(3);
+    // Each icon button should have at least one visible img (the Archive
+    // button has two — closed + opened art — but only one is visible).
     for (let i = 0; i < count; i++) {
-      await expect(iconImgs.nth(i)).toBeVisible();
+      await expect(buttons.nth(i).locator('img').first()).toBeVisible();
     }
   });
 
