@@ -1,26 +1,28 @@
 :root {
   --bg: #ffffff;
-  --text: #1a1a1a;
-  --text-muted: #666666;
-  --link: #0066cc;
-  --link-hover: #004499;
-  --accent: #4a90e2;
-  --border: #e0e0e0;
-  --code-bg: #f5f5f5;
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --text: #000000;
+  --text-muted: #444444;
+  --link: #0000ee;
+  --link-hover: #0000aa;
+  --accent: #000000;
+  --border: #000000;
+  --code-bg: #ffffff;
+  --font-sans: 'Geneva', 'Arial', sans-serif;
+  --font-mono: 'Monaco', 'Courier New', 'Courier', monospace;
 }
 
 @media (prefers-color-scheme: dark) {
+  /* Classic Mac didn't have dark mode, but we can keep it slightly muted if we want,
+     or just force the light document look. We'll force the document look for authenticity. */
   :root {
-    --bg: #121212;
-    --text: #e0e0e0;
-    --text-muted: #a0a0a0;
-    --link: #66b3ff;
-    --link-hover: #99ccff;
-    --accent: #66b3ff;
-    --border: #333333;
-    --code-bg: #1e1e1e;
+    --bg: #ffffff;
+    --text: #000000;
+    --text-muted: #444444;
+    --link: #0000ee;
+    --link-hover: #0000aa;
+    --accent: #000000;
+    --border: #000000;
+    --code-bg: #ffffff;
   }
 }
 
@@ -28,57 +30,59 @@ body {
   font-family: var(--font-sans);
   background-color: var(--bg);
   color: var(--text);
-  line-height: 1.6;
+  line-height: 1.4; /* Tighter line height for retro feel */
   margin: 0;
   padding: 0;
-  -webkit-font-smoothing: antialiased;
+  /* Removed antialiasing to allow native (potentially blockier) font rendering */
 }
 
 a {
   color: var(--link);
-  text-decoration: none;
+  text-decoration: underline; /* Classic links are always underlined */
 }
 
 a:hover {
   color: var(--link-hover);
-  text-decoration: underline;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+  font-family: 'ChicagoFLF', var(--font-sans);
+  font-weight: normal; /* Classic Mac UI often relied on font family rather than thick weights */
   line-height: 1.2;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
-h1 { font-size: 2.25rem; }
-h2 { font-size: 1.8rem; }
-h3 { font-size: 1.5rem; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
 
 code, pre {
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 0.95em;
 }
 
 pre {
   background-color: var(--code-bg);
   padding: 1rem;
-  border-radius: 0.375rem;
+  border-radius: 0; /* No rounded corners */
   overflow-x: auto;
-  border: 1px solid var(--border);
+  /* Classic inset border */
+  border: 2px solid;
+  border-color: #888888 #ffffff #ffffff #888888;
 }
 
 :not(pre) > code {
-  background-color: var(--code-bg);
-  padding: 0.2em 0.4em;
-  border-radius: 0.25rem;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 
 blockquote {
-  border-left: 4px solid var(--accent);
+  border-left: 3px solid #000000;
   margin: 1.5rem 0;
   padding: 0.5rem 0 0.5rem 1rem;
-  color: var(--text-muted);
+  color: var(--text);
   font-style: italic;
 }
 
@@ -89,9 +93,9 @@ blockquote {
 }
 
 header {
-  padding: 2rem 0;
+  padding: 1rem 0;
   margin-bottom: 2rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
 }
 
 .header-inner {
@@ -101,31 +105,64 @@ header {
 }
 
 .site-title {
-  font-family: var(--font-mono);
+  font-family: 'ChicagoFLF', var(--font-sans);
   font-size: 1.25rem;
-  font-weight: 700;
   color: var(--text);
 }
 
 .site-title a {
   color: inherit;
+  text-decoration: none;
 }
 
 .header-links a {
   margin-left: 1rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  color: var(--link);
+  font-size: 0.95rem;
 }
 
 footer {
+  font-family: 'ChicagoFLF', var(--font-sans);
   margin-top: 4rem;
   padding: 2rem 0;
-  border-top: 1px solid var(--border);
+  border-top: 2px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 1rem;
   text-align: center;
 }
 
 footer a {
-  color: var(--text);
+  color: var(--link);
+}
+
+/* 1. Classic Platinum & Periwinkle Dither (2x2 Checkerboard) */
+.bg-os8-dither {
+  background-color: #EEEEEE; /* Platinum gray base */
+  background-image: conic-gradient(
+    #9999CC 90deg, 
+    transparent 90deg 180deg, 
+    #9999CC 180deg 270deg, 
+    transparent 270deg
+  );
+  background-size: 2px 2px;
+  image-rendering: pixelated; /* Forces hard pixel edges */
+}
+
+/* 2. Mac OS "Woven" Crosshatch Pattern (8x8 Weave) */
+.bg-os8-weave {
+  background-color: #EEEEEE; /* Platinum gray base */
+  background-image: 
+    repeating-linear-gradient(45deg, #CCCCCC 0, #CCCCCC 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(-45deg, #CCCCCC 0, #CCCCCC 1px, transparent 1px, transparent 4px);
+  background-size: 8px 8px;
+  image-rendering: pixelated;
+}
+
+/* 3. Bondi Blue Stipple (Tiny 2x2 Base64 PNG) */
+.bg-os8-bondi {
+  /* Exactly 104 bytes. A 2x2 PNG using #007788 and #00AAAA for a classic teal iMac vibe */
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGNgKO9gWLWKAYTLOwAeNASnVBlSOwAAAABJRU5ErkJggg==");
+  background-repeat: repeat;
+  background-size: 2px 2px;
+  image-rendering: pixelated;
 }
