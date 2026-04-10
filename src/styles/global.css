@@ -1,3 +1,4 @@
+/* Classic Mac theme: forced light mode, no dark mode variant */
 :root {
   --bg: #ffffff;
   --text: #000000;
@@ -6,29 +7,16 @@
   --link-hover: #0000aa;
   --accent: #000000;
   --border: #000000;
+  --border-light: #888888;
+  --border-highlight: #ffffff;
   --code-bg: #ffffff;
   --font-sans: 'Geneva', 'Arial', sans-serif;
   --font-mono: 'Monaco', 'Courier New', 'Courier', monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  /* Classic Mac didn't have dark mode, but we can keep it slightly muted if we want,
-     or just force the light document look. We'll force the document look for authenticity. */
-  :root {
-    --bg: #ffffff;
-    --text: #000000;
-    --text-muted: #444444;
-    --link: #0000ee;
-    --link-hover: #0000aa;
-    --accent: #000000;
-    --border: #000000;
-    --code-bg: #ffffff;
-  }
-}
-
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg);
+  background-color: transparent;
   color: var(--text);
   line-height: 1.4; /* Tighter line height for retro feel */
   margin: 0;
@@ -69,7 +57,7 @@ pre {
   overflow-x: auto;
   /* Classic inset border */
   border: 2px solid;
-  border-color: #888888 #ffffff #ffffff #888888;
+  border-color: var(--border-light) var(--border-highlight) var(--border-highlight) var(--border-light);
 }
 
 :not(pre) > code {
@@ -79,46 +67,11 @@ pre {
 }
 
 blockquote {
-  border-left: 3px solid #000000;
+  border-left: 3px solid var(--border);
   margin: 1.5rem 0;
   padding: 0.5rem 0 0.5rem 1rem;
   color: var(--text);
   font-style: italic;
-}
-
-.container {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-header {
-  padding: 1rem 0;
-  margin-bottom: 2rem;
-  border-bottom: 2px solid var(--border);
-}
-
-.header-inner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.site-title {
-  font-family: 'ChicagoFLF', var(--font-sans);
-  font-size: 1.25rem;
-  color: var(--text);
-}
-
-.site-title a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.header-links a {
-  margin-left: 1rem;
-  color: var(--link);
-  font-size: 0.95rem;
 }
 
 footer {
@@ -133,29 +86,6 @@ footer {
 
 footer a {
   color: var(--link);
-}
-
-/* 1. Classic Platinum & Periwinkle Dither (2x2 Checkerboard) */
-.bg-os8-dither {
-  background-color: #EEEEEE; /* Platinum gray base */
-  background-image: conic-gradient(
-    #9999CC 90deg, 
-    transparent 90deg 180deg, 
-    #9999CC 180deg 270deg, 
-    transparent 270deg
-  );
-  background-size: 2px 2px;
-  image-rendering: pixelated; /* Forces hard pixel edges */
-}
-
-/* 2. Mac OS "Woven" Crosshatch Pattern (8x8 Weave) */
-.bg-os8-weave {
-  background-color: #EEEEEE; /* Platinum gray base */
-  background-image: 
-    repeating-linear-gradient(45deg, #CCCCCC 0, #CCCCCC 1px, transparent 1px, transparent 4px),
-    repeating-linear-gradient(-45deg, #CCCCCC 0, #CCCCCC 1px, transparent 1px, transparent 4px);
-  background-size: 8px 8px;
-  image-rendering: pixelated;
 }
 
 /* 3. Bondi Blue Stipple (Tiny 2x2 Base64 PNG) */
