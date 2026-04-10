@@ -24,3 +24,7 @@ pnpm-debug.log*
 .idea/
 .vercel
 .claude/settings.local.json
+
+# Next.js
+.next/
+out/
