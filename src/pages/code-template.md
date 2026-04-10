@@ -1,12 +1,12 @@
+---
 layout: ../layouts/PostLayout.astro  
- title: Your Article Title Here  
- subTitle: A one-sentence description or hook for the post.  
- date: 2026-04-09T00:00:00.000Z  
- tags:  
- - tag-one  
- - tag-two  
- accentColor: "#4a9eff"
-
+title: Code Template  
+subTitle: A template for future code posts.  
+date: 2026-04-09T00:00:00.000Z  
+tags:  
+  - template
+  - astro
+accentColor: "#4a9eff"
 ---
 
 Opening paragraph. Set the context — what problem are you solving or what are you exploring?
