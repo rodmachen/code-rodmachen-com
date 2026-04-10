@@ -27,8 +27,8 @@ test.describe('classic window', () => {
 
   test('title bar has pinstripe (before/after pseudo-elements)', async ({ page }) => {
     await page.goto('/');
-    // Verify the title element exists and has expected dimensions
-    const title = page.locator('.title');
+    // Verify the main window title element exists and has expected dimensions
+    const title = page.locator('#main-window .title');
     await expect(title).toBeVisible();
     const box = await title.boundingBox();
     expect(box).not.toBeNull();

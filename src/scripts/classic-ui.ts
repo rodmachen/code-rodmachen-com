@@ -115,19 +115,23 @@ let modalTrigger: HTMLElement | null = null;
 export function openModal(id: string): void {
   const modal = document.getElementById(id);
   if (!modal) return;
+  const backdrop = document.getElementById('modal-backdrop');
   modal.hidden = false;
+  if (backdrop) backdrop.hidden = false;
   win?.classList.add('inactive');
-  // Focus first focusable element in modal
+  // Focus the close button (first focusable element in modal)
   const focusable = modal.querySelector<HTMLElement>(
-    'button, [href], input, [tabindex]:not([tabindex="-1"])'
+    '[data-close-modal], button, [href], input, [tabindex]:not([tabindex="-1"])'
   );
   focusable?.focus();
 }
 
 export function closeModal(): void {
-  const openModal = document.querySelector<HTMLElement>('.sub-window:not([hidden])');
-  if (!openModal) return;
-  openModal.hidden = true;
+  const openModalEl = document.querySelector<HTMLElement>('.sub-window:not([hidden])');
+  if (!openModalEl) return;
+  openModalEl.hidden = true;
+  const backdrop = document.getElementById('modal-backdrop');
+  if (backdrop) backdrop.hidden = true;
   win?.classList.remove('inactive');
   // Restore focus to trigger
   modalTrigger?.focus();
@@ -141,6 +145,14 @@ document.querySelectorAll<HTMLElement>('[data-modal]').forEach((trigger) => {
     closeMenu();
     modalTrigger = trigger;
     openModal(trigger.dataset.modal!);
+  });
+});
+
+// Wire up close buttons inside sub-windows
+document.querySelectorAll<HTMLElement>('[data-close-modal]').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeModal();
   });
 });
 

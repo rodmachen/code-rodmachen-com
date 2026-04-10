@@ -198,6 +198,14 @@ button.control-box {
 	inset 1px 1px 0px 0px #444,
 	inset 2px 2px 0px 0px #555;
 }
+/* Modal backdrop: transparent click-catcher behind sub-windows */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 490;
+    background: transparent;
+}
+
 /* Hide only visually, but have it available for screenreaders & for SEO purposes. See h5bp.com/v */
 .visuallyhidden {
     border: 0;

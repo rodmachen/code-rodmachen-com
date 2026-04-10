@@ -1,0 +1,56 @@
+---
+import SubWindow from '../SubWindow.astro';
+---
+
+<SubWindow id="modal-about-site" title="About this site">
+  <div class="about-site-content">
+    <h3>code.rodmachen.com</h3>
+    <p>A tech and code writing hub by Rod Machen, styled after classic Mac OS 8.1.</p>
+
+    <h4>Tech Stack</h4>
+    <ul>
+      <li><strong>Astro 5.x</strong> — static site generator</li>
+      <li><strong>Vercel</strong> — deployment and hosting</li>
+      <li><strong>TypeScript</strong> — type-safe scripting</li>
+      <li><strong>ChicagoFLF font</strong> — the authentic Mac OS system typeface</li>
+      <li><strong>Playwright</strong> — end-to-end testing</li>
+    </ul>
+
+    <h4>Design Inspiration</h4>
+    <p>
+      The interface is inspired by Mac OS 8.1 (circa 1997–1998): the Platinum
+      appearance, Bondi Blue desktop, pinstripe title bars, and classic
+      window chrome. Writing about code feels right inside the OS that made
+      many of us fall in love with computers.
+    </p>
+
+    <p>
+      <a href="https://github.com/rodmachen/code-rodmachen-com" target="_blank" rel="noopener noreferrer">
+        View source on GitHub
+      </a>
+    </p>
+  </div>
+</SubWindow>
+
+<style>
+  .about-site-content h3 {
+    font-family: 'ChicagoFLF', sans-serif;
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+  }
+  .about-site-content h4 {
+    font-family: 'ChicagoFLF', sans-serif;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
+  }
+  .about-site-content ul {
+    margin: 0.25rem 0 0.75rem 1.25rem;
+    padding: 0;
+  }
+  .about-site-content p {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+  }
+</style>
