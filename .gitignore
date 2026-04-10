@@ -24,3 +24,8 @@ pnpm-debug.log*
 .idea/
 .vercel
 .claude/settings.local.json
+
+# Playwright
+test-results/
+playwright-report/
+tests/e2e/snapshots/
