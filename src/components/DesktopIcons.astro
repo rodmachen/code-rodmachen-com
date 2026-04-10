@@ -1,38 +1,33 @@
 ---
 // DesktopIcons component — classic Mac OS 8.1 style right-side desktop icons
-// Triggers for About and Contact modals are handled by classic-ui.ts via data-modal
+// Triggers for modals are handled by classic-ui.ts via data-modal
 ---
 
+<!-- Main icon column (right side, below menu bar) -->
 <div class="desktop-icons">
-  <!-- Hard disk: links to home -->
-  <a href="/" class="desktop-icon">
+  <!-- Archive: opens posts list window -->
+  <button type="button" class="desktop-icon" data-modal="modal-archive" aria-label="Open Archive">
     <img src="/img/icons/disk.svg" alt="" width="40" height="36" aria-hidden="true" />
-    <span>code.rodmachen.com</span>
-  </a>
+    <span>Archive</span>
+  </button>
 
-  <!-- Info Center: opens About modal -->
+  <!-- About: opens About modal (document icon, like "About Mac OS 8.1") -->
   <button type="button" class="desktop-icon" data-modal="modal-about" aria-label="Open About">
-    <img src="/img/icons/info.svg" alt="" width="40" height="40" aria-hidden="true" />
+    <img src="/img/icons/doc.svg" alt="" width="32" height="40" aria-hidden="true" />
     <span>About</span>
   </button>
 
-  <!-- Globe: links to rodmachen.com in new tab -->
-  <a href="https://rodmachen.com" target="_blank" rel="noopener noreferrer" class="desktop-icon">
-    <img src="/img/icons/globe.svg" alt="" width="40" height="40" aria-hidden="true" />
-    <span>Browse the Internet</span>
-  </a>
-
-  <!-- Mail: opens Contact modal -->
+  <!-- Contact: opens Contact modal -->
   <button type="button" class="desktop-icon" data-modal="modal-contact" aria-label="Open Contact">
     <img src="/img/icons/mail.svg" alt="" width="40" height="32" aria-hidden="true" />
-    <span>Mail</span>
+    <span>Contact</span>
   </button>
+</div>
 
-  <!-- Trash: decorative -->
-  <div class="desktop-icon desktop-icon--static" aria-hidden="true">
-    <img src="/img/icons/trash.svg" alt="" width="32" height="40" />
-    <span>Trash</span>
-  </div>
+<!-- Trash: fixed at bottom-right -->
+<div class="desktop-icon desktop-trash" aria-hidden="true">
+  <img src="/img/icons/trash.svg" alt="" width="32" height="40" />
+  <span>Trash</span>
 </div>
 
 <style>
@@ -77,14 +72,18 @@
     display: block;
     filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
   }
-  /* Trash: no hover effect */
-  .desktop-icon--static {
+  /* Trash: fixed at bottom-right, no hover effect */
+  .desktop-trash {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 50;
     cursor: default;
   }
-  .desktop-icon--static:hover {
+  .desktop-trash:hover {
     color: white;
   }
-  .desktop-icon--static:hover img {
+  .desktop-trash:hover img {
     filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.5));
   }
 </style>

@@ -62,7 +62,7 @@ button {
 /* Title bar */
 .title {
     width: 100%;
-    font-size: inherit;
+    font-size: 14px;
     font-weight: inherit;
     margin: 0;
     padding: 0 44px; /* leave room for control boxes */
@@ -79,7 +79,7 @@ button {
 .title::after {
     content: '';
     flex: 1;
-    height: 14px;
+    height: 12px;
     min-width: 4px;
     background-image: repeating-linear-gradient(
         to bottom,
@@ -132,9 +132,7 @@ button.control-box {
     left: 4px;
 }
 .control-box-inner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
     height: 11px;
     width: 11px;
     background-image:
@@ -155,23 +153,25 @@ button.control-box {
 }
 /* Zoom glyph: small square in upper-left quadrant */
 .zoom-box-inner {
+    position: absolute;
+    top: 1px;
+    left: 1px;
     width: 5px;
     height: 5px;
     border: 1px solid #000;
-    align-self: flex-start;
-    margin-top: 1px;
-    margin-left: 1px;
-    flex-shrink: 0;
 }
 .windowshade-box.control-box {
     right: 4px;
 }
-/* Windowshade glyph: centered horizontal line */
+/* Windowshade glyph: centered horizontal dash */
 .windowshade-box-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 7px;
-    height: 1px;
+    height: 2px;
     background: #000;
-    flex-shrink: 0;
 }
 .content .command_button {
     height: 22px;

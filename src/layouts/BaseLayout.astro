@@ -6,6 +6,7 @@ import DesktopIcons from '../components/DesktopIcons.astro';
 import AboutSiteModal from '../components/modals/AboutSiteModal.astro';
 import AboutModal from '../components/modals/AboutModal.astro';
 import ContactModal from '../components/modals/ContactModal.astro';
+import ArchiveModal from '../components/modals/ArchiveModal.astro';
 
 interface Props {
   title?: string;
@@ -162,6 +163,7 @@ const { title = "code.rodmachen.com", description = "Tech and code writing by Ro
     <AboutSiteModal />
     <AboutModal />
     <ContactModal />
+    <ArchiveModal />
 
     <script>
       import '../scripts/classic-ui.ts';

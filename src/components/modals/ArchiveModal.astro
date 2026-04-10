@@ -1,0 +1,95 @@
+---
+import SubWindow from '../SubWindow.astro';
+
+// Posts list — keep in sync with index.astro
+const posts = [
+  {
+    title: "Building the Next Generation of code.rodmachen.com",
+    slug: "sample-post",
+    date: new Date('2026-04-08'),
+  },
+  {
+    title: "Code Template",
+    slug: "code-template",
+    date: new Date('2026-04-09'),
+  }
+];
+---
+
+<SubWindow id="modal-archive" title="Archive">
+  <div class="archive-header">
+    <span class="archive-count">{posts.length} items</span>
+  </div>
+  <ul class="archive-list">
+    {posts.map(post => (
+      <li class="archive-item">
+        <img src="/img/icons/doc.svg" alt="" width="16" height="20" aria-hidden="true" class="archive-item-icon" />
+        <div class="archive-item-info">
+          <a href={`/${post.slug}/`} class="archive-item-title">{post.title}</a>
+          <span class="archive-item-date">
+            {post.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+          </span>
+        </div>
+      </li>
+    ))}
+  </ul>
+</SubWindow>
+
+<style>
+  .archive-header {
+    font-size: 11px;
+    color: #666;
+    padding: 0 0 6px 0;
+    border-bottom: 1px solid #aaa;
+    margin-bottom: 4px;
+    font-family: 'Geneva', Arial, sans-serif;
+  }
+  .archive-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .archive-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 2px;
+    border-bottom: 1px solid #ddd;
+    font-family: 'Geneva', Arial, sans-serif;
+    font-size: 12px;
+  }
+  .archive-item:hover {
+    background: #000;
+    color: #fff;
+  }
+  .archive-item:hover .archive-item-title {
+    color: #fff;
+  }
+  .archive-item-icon {
+    flex-shrink: 0;
+  }
+  .archive-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .archive-item-title {
+    color: #000;
+    text-decoration: none;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .archive-item-title:hover {
+    text-decoration: underline;
+  }
+  .archive-item-date {
+    font-size: 10px;
+    color: #666;
+  }
+  .archive-item:hover .archive-item-date {
+    color: #ccc;
+  }
+</style>

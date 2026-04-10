@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="32" height="40">
+  <!-- Document body -->
+  <path d="M3 1 L21 1 L29 9 L29 39 L3 39 Z" fill="white" stroke="black" stroke-width="1.5"/>
+  <!-- Folded corner triangle -->
+  <path d="M21 1 L21 9 L29 9 Z" fill="#ccc" stroke="black" stroke-width="1.5"/>
+  <!-- Text lines -->
+  <line x1="7" y1="16" x2="25" y2="16" stroke="#666" stroke-width="1.5"/>
+  <line x1="7" y1="20" x2="25" y2="20" stroke="#666" stroke-width="1.5"/>
+  <line x1="7" y1="24" x2="25" y2="24" stroke="#666" stroke-width="1.5"/>
+  <line x1="7" y1="28" x2="19" y2="28" stroke="#666" stroke-width="1.5"/>
+</svg>
