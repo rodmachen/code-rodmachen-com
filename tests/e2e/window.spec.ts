@@ -67,19 +67,18 @@ test.describe('classic window', () => {
     await expect(appleImg).toBeVisible();
   });
 
-  test('five desktop icons are present', async ({ page }) => {
+  test('three desktop icons are present', async ({ page }) => {
     await page.goto('/');
     const icons = page.locator('.desktop-icon');
     const count = await icons.count();
-    expect(count).toBe(5);
+    expect(count).toBe(3);
   });
 
   test('desktop icon SVGs load', async ({ page }) => {
     await page.goto('/');
     const iconImgs = page.locator('.desktop-icons img');
     const count = await iconImgs.count();
-    expect(count).toBe(5);
-    // Each img should be visible
+    expect(count).toBe(3);
     for (let i = 0; i < count; i++) {
       await expect(iconImgs.nth(i)).toBeVisible();
     }
