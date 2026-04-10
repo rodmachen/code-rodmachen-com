@@ -112,6 +112,14 @@ document.getElementById('view-normal')?.addEventListener('click', () => {
 
 let modalTrigger: HTMLElement | null = null;
 
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (el) => !el.closest('[hidden]') && el.getAttribute('aria-disabled') !== 'true'
+  );
+}
+
 export function openModal(id: string): void {
   const modal = document.getElementById(id);
   if (!modal) return;
@@ -120,15 +128,36 @@ export function openModal(id: string): void {
   if (backdrop) backdrop.hidden = false;
   win?.classList.add('inactive');
   // Focus the close button (first focusable element in modal)
-  const focusable = modal.querySelector<HTMLElement>(
-    '[data-close-modal], button, [href], input, [tabindex]:not([tabindex="-1"])'
-  );
-  focusable?.focus();
+  const focusable = getFocusableElements(modal);
+  focusable[0]?.focus();
+  // Install focus trap
+  modal.addEventListener('keydown', trapFocus);
+}
+
+function trapFocus(e: Event): void {
+  if (!(e instanceof KeyboardEvent) || e.key !== 'Tab') return;
+  const modal = (e.currentTarget as HTMLElement);
+  const focusable = getFocusableElements(modal);
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey) {
+    if (document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    }
+  } else {
+    if (document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 }
 
 export function closeModal(): void {
   const openModalEl = document.querySelector<HTMLElement>('.sub-window:not([hidden])');
   if (!openModalEl) return;
+  openModalEl.removeEventListener('keydown', trapFocus);
   openModalEl.hidden = true;
   const backdrop = document.getElementById('modal-backdrop');
   if (backdrop) backdrop.hidden = true;
