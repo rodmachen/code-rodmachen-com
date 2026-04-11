@@ -570,6 +570,29 @@ window — not generic web typography. This step is the project-brief.md
 Phase 1 styling work, applied to the Classicy reading pane instead of an
 Astro layout.
 
+**Typography reference (locked in by user, recorded during Step 3 review):**
+The previous version of `code.rodmachen.com` used **Chicago** (the classic
+Mac bitmap system font) for every heading — post title and all section
+headings — with a readable sans (Geneva-like) for body copy. That is the
+target aesthetic for this step. The user shared a screenshot of the old
+"Code Template" post during Step 3 as reference: title in Chicago, blue,
+large; `Main Section` / `Subsection` / `Another Section` / `Conclusion`
+all in Chicago at a stepped-down size; body in sans; dark-background
+monospace code blocks. This is not up for reinterpretation — Step 6 must
+use Chicago for headings.
+
+**Chicago font notes for the executor:**
+- Chicago is a **bitmap font.** At arbitrary sizes it blurs. Either ship
+  a TTF reflow (ChicagoFLF is public-domain, credited in Classicy's
+  README) or pin heading sizes to pixel values that hit the bitmap grid
+  cleanly. Do **not** use a fractional `rem` scale for headings.
+- **Check `classicy/dist/classicy.css` first** — Classicy may already
+  load a Chicago webfont as part of its Platinum theme. If it does,
+  reuse that `@font-face` instead of shipping Chicago twice.
+- Chicago is for the *reading pane content only*. Classicy already
+  styles its own chrome (menu bar, window title, buttons) — don't
+  touch it.
+
 Files created/modified:
 - `app/components/PostBody.tsx` — wrap the rendered HTML in a `.postBody`
   class that scopes all styles below
@@ -614,9 +637,18 @@ Files created/modified:
 >    - **Body text:** readable serif stack (Charter, Georgia, serif) or
 >      system stack — pick based on what looks right inside the Classicy
 >      window. Line-height ~1.6, max-width ~65ch inside the reading pane.
->    - **Headings:** era-appropriate hierarchy. h1 slightly larger and
->      bolder; h2–h4 step down cleanly. System stack unless you find a
->      free Chicago-alike worth the cost.
+>    - **Headings:** **Chicago font, mandatory** for h1–h6 (the user
+>      ran this on the previous site and asked for it explicitly —
+>      reference screenshot shared during Step 3 review, see the
+>      "Typography reference" note above). Check
+>      `classicy/dist/classicy.css` first for an existing Chicago
+>      `@font-face` — reuse it if present. If not, ship ChicagoFLF
+>      (public domain, credited in Classicy's README) as a self-hosted
+>      webfont under `public/fonts/` and declare it in
+>      `post-body.module.css`. Chicago is a bitmap font — pin heading
+>      sizes to pixel values that hit the grid cleanly (e.g. 24px /
+>      18px / 14px / 12px), do **not** use a fractional rem scale.
+>      Stepped hierarchy: h1 largest, h2–h4 step down, h5–h6 optional.
 >    - **Code blocks:** monospace, light background, padding, horizontal
 >      scroll on overflow. Must not visually fight the Mac OS 8 window
 >      chrome.
@@ -639,6 +671,9 @@ Files created/modified:
 >    - Navigates to `/posts/typography-test`
 >    - Asserts `<h1>`, `<h2>`, `<pre><code>`, `<blockquote>`, and `<table>`
 >      elements are present inside `.postBody`
+>    - Asserts the `h1` uses Chicago — read
+>      `getComputedStyle(h1).fontFamily` and assert it contains
+>      `"Chicago"` (or `"ChicagoFLF"`, whichever you ship)
 >    - Asserts at least one `<pre>` has inline color styles (evidence that
 >      Shiki ran) — `expect(style).toContain('color')` or similar
 >    - Asserts no horizontal overflow at default window size (compare
