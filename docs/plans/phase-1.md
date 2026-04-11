@@ -389,7 +389,7 @@ what broke, and bring it back to the user before proceeding to Step 4.
 
 ---
 
-## Step 4 — Velite content pipeline + 2 placeholder posts
+## Step 4 — Velite content pipeline + 2 placeholder posts ✅ complete
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** TDD-lite — write a failing Vitest test asserting the
