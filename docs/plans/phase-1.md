@@ -50,7 +50,7 @@ These are **not** Phase 1 blockers but should be revisited before public launch.
    in App Router must wrap it in a client boundary themselves. → Step 3
    establishes that boundary.
 3. **Pre-1.0 framework (0.6.54).** → Pin the exact version, no caret.
-4. **Bundle weight unknown.** → Step 10 captures a measurement and records
+4. **Bundle weight unknown.** → Step 11 captures a measurement and records
    it in the PR description. Budget enforcement deferred to Phase 2.
 
 ---
@@ -73,11 +73,22 @@ Each role has a well-defined lane.
 - **Fills in Step 9's prompt with the exact API patterns produced by
   Steps 7 and 8** before handoff (without that, Step 9 isn't really a
   Gemini task)
-- Interprets the bundle numbers Gemini produces in Step 10
+- Interprets the bundle numbers Gemini produces in Step 11
+
+**Test posture for Steps 7–9 (and any inserted UI iteration steps):**
+**tests deferred to Step 10.** UI iteration is the wrong time to write
+tests — assertions get rewritten as the design changes. Steps 7, 8, 9
+land UI changes with no new test files (only minimal maintenance to
+existing tests so CI stays green). Each step documents its test
+contract in a "Test specs for Step 10" subsection. Step 10 is a
+dedicated tests-only step that implements every deferred spec in one
+pass. **More UI iteration steps may be inserted between Step 9 and Step
+10** as the design evolves; each carries its own deferred test spec
+that Step 10 absorbs.
 
 **Gemini 3.1 Pro:**
 - Executes mechanical scaffolding and implementation work for Steps
-  1, 2, 4, 6, 9, and the mechanical half of Step 10 (sub-step 10b)
+  1, 2, 4, 6, 9, 10, and the mechanical half of Step 11 (sub-step 11b)
 - Reads this plan file as its source of truth for each step
 - Produces files and pastes verification command output
 - **Does not touch git.** No staging, no commits, no pushes. Just writes
@@ -85,11 +96,12 @@ Each role has a well-defined lane.
 
 **User (Rod):**
 - Switches the active model in Claude Code between Opus-owned steps
-  (3, 5, 7, 8) and Gemini-executed steps (1, 2, 4, 6, 9, 10-mechanical)
+  (3, 5, 7, 8, plus any inserted UI iteration steps) and Gemini-executed
+  steps (1, 2, 4, 6, 9, 10, 11-mechanical)
 - Runs the Gemini prompts in a separate Gemini session
 - Pastes Gemini's reply back into Claude Code so Opus can review and commit
-- Performs the one-time Vercel project setup in Step 10 (sub-step 10a)
-- Makes the DNS-cutover call in Step 10 (sub-step 10d)
+- Performs the one-time Vercel project setup in Step 11 (sub-step 11a)
+- Makes the DNS-cutover call in Step 11 (sub-step 11d)
 - Reviews and merges the PR
 
 **Verification policy:** Gemini runs the per-step verification commands
@@ -738,7 +750,10 @@ Files created/modified:
 ## Step 7 — Chrome, menu bars, and window framing
 
 **Executor:** Opus · **Reviewer:** Opus
-**Test posture:** tests-alongside
+**Test posture:** **tests deferred to Step 10.** Document the test spec
+in this step (see "Test specs" subsection); Step 10 implements them.
+This step minimally maintains any existing tests it breaks so CI stays
+green, but writes no new test files.
 
 UI polish on top of Steps 5–6: fix layout chrome, define the four menu
 bars properly, position desktop chrome (clock, speaker, hard drive icon),
@@ -802,7 +817,10 @@ that comes in Step 8.
 - New: `tests/e2e/chrome.spec.ts`
 - Possibly new: `app/globals.css` or extend `app/layout.tsx` to reset the white border
 
-### Tests (`tests/e2e/chrome.spec.ts`, tests-alongside)
+### Test specs for Step 10 (`tests/e2e/chrome.spec.ts`)
+
+These are the assertions Step 10 will implement. Documented here so the
+behavior contract lives next to the code that defines it.
 
 - Exactly one menu bar in DOM
 - BlogWindow is horizontally centered and `<= 1000px` wide at default zoom
@@ -823,7 +841,16 @@ that comes in Step 8.
 - `npm run lint` — clean
 - `npm test` — unit suite passes
 - `npm run build` — succeeds
-- `npm run test:e2e` — `chrome.spec.ts` plus all existing pass
+- `npm run test:e2e` — **all existing tests still pass.** No new tests
+  in this step. If a chrome change breaks an existing assertion (e.g. the
+  smoke test's menubar check), update the existing assertion minimally
+  to reflect the new state — do not skip, do not write new specs.
+- **Manual browser check:** load `npm run dev`, visit `/`, walk the four
+  menus, toggle View → Full Width / Normal, verify the clock has no
+  seconds, verify the speaker icon is muted and to the left of the clock,
+  verify `Hard Drive` desktop label, verify Apple → About This Site
+  opens the tech-stack window, verify Help → Help me… opens google.com
+  in a new tab.
 
 ### Commit message
 
@@ -834,7 +861,11 @@ that comes in Step 8.
 ## Step 8 — Multi-window architecture (Reader + Posts listings)
 
 **Executor:** Opus · **Reviewer:** Opus
-**Test posture:** tests-alongside
+**Test posture:** **tests deferred to Step 10.** Same rule as Step 7:
+no new tests, but minimally maintain existing tests so CI stays green.
+The `BlogWindow` → `PostReaderWindow` rename will break `blog.spec.ts`
+selectors — strip the broken assertions, do not write replacement
+assertions (those land in Step 10).
 
 This is the **architectural change** of Phase 1's UI work: move from
 Model A (single window with sidebar + reading pane) to a multi-window
@@ -873,22 +904,26 @@ Gemini task that follows patterns this step establishes.
 - Delete: `app/components/BlogWindow.tsx`
 - New: `app/components/PostListingsWindow.tsx`
 - Modified: `app/components/ClassicyDesktopInner.tsx` (register the listings window; rewire File → Open handler)
-- Modified: `tests/e2e/blog.spec.ts` (drop sidebar assertions; what remains is just "Reader displays the correct post for the URL")
-- Modified: `tests/e2e/chrome.spec.ts` (rewire the File → Open assertion from "stubbed" to "opens listings window")
-- New: `tests/e2e/posts-listings.spec.ts`
+- Modified: `tests/e2e/blog.spec.ts` (strip sidebar assertions only — no new assertions; Step 10 rewrites this test file)
 
-### Tests
+### Test specs for Step 10
 
-- **`posts-listings.spec.ts`:**
+These are the assertions Step 10 will implement.
+
+- **`posts-listings.spec.ts` (new in Step 10):**
   - File → Open opens the Posts listings window
   - Listings shows both posts with their Name, Date Added, and Tags columns populated
   - Clicking a row navigates to `/posts/[slug]` and the Reader displays the new post
   - Listings window remains visible after selection (single-Reader model)
   - Direct nav to `/posts/typography-test` still selects it in the Reader (deep-link preserved)
 
-- **`blog.spec.ts` updates:**
-  - Remove all sidebar selectors and the in-window navigation tests (those move to `posts-listings.spec.ts`)
-  - Keep: Reader displays the correct post for the URL; deep-link nav works
+- **`blog.spec.ts` rewrite in Step 10:**
+  - Reader displays the correct post for the URL
+  - Deep-link nav to `/posts/[slug]` works
+  - (The in-window navigation tests are gone — that behavior moved to `posts-listings.spec.ts`)
+
+- **`chrome.spec.ts` File → Open assertion:**
+  - Step 7's spec has `File → Open` as a stub. Step 10 implements that test as "opens the Posts listings window," not the stubbed no-op.
 
 ### Verify
 
@@ -898,8 +933,11 @@ Gemini task that follows patterns this step establishes.
 - `npm run lint` — clean
 - `npm test` — unit suite passes
 - `npm run build` — succeeds, still emits the SSG post routes
-- `npm run test:e2e` — all suites pass (smoke, chrome, blog, typography, posts-listings)
-- **Manual smoke:** open `/`, verify Reader shows most recent post; File → Open opens the listings; click a row, verify URL changes and Reader updates.
+- `npm run test:e2e` — **all existing tests still pass after the
+  minimal `blog.spec.ts` strip-down.** No new tests in this step.
+- **Manual smoke:** open `/`, verify Reader shows most recent post;
+  File → Open opens the listings; click a row, verify URL changes and
+  Reader updates; direct-nav to `/posts/typography-test` still works.
 
 ### Handoff to Step 9
 
@@ -926,7 +964,10 @@ Gemini will either guess (false-green risk) or stop and wait.
 ## Step 9 — About/Contact sub-windows + Geneva body font
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
-**Test posture:** tests-alongside
+**Test posture:** **tests deferred to Step 10.** Same rule as Steps 7
+and 8: no new test files. The Geneva font swap loses its automated
+false-green guard during this step, so this step adds a **mandatory
+manual browser verification** as a substitute (see Verify below).
 
 A purely mechanical wrap-up step. By the time Step 9 starts, every
 Classicy API needed has been documented (Step 7's chrome work covered
@@ -965,24 +1006,17 @@ not to investigate.
      - **DO NOT download or ship a Geneva font file.** Step 6 had an incident where a 14-byte 404 response was saved as `.ttf` and the test passed false-green because `getComputedStyle().fontFamily` returns the *declared* family string, not the *resolved* font. If you can't verify a font binary is a real font, don't ship it. Use the system fallback chain.
    - Report in your reply: which path you took (Classicy-shipped vs system fallback) and why.
 
-5. **Tests.**
+5. **Tests are deferred to Step 10.** Do **not** write new test files in
+   this step. Do **not** modify `tests/e2e/typography.spec.ts`. The
+   contracts for `desktop-windows.spec.ts` and the `typography.spec.ts`
+   body-font additions live in the "Test specs for Step 10" subsection
+   below — Step 10's executor will implement them.
 
-   - **New `tests/e2e/desktop-windows.spec.ts`:**
-     - Desktop has icons labeled exactly `About` and `Contact`
-     - Double-clicking About opens a window containing the substring `Rod Machen`
-     - Double-clicking Contact opens a window containing the substring `github.com/rodmachen`
-     - Both sub-windows render above the Reader (z-index check or DOM stacking order)
-     - About sub-window content is **different** from the Apple menu's "About This Site" modal (different substring assertion)
-
-   - **`tests/e2e/typography.spec.ts` update — REQUIRED to follow the Step 6 hardening pattern:**
-     - Add: select an element inside `.blogPostBody` that is NOT a heading (e.g. a paragraph). Read its computed `font-family`.
-     - Assert it does NOT contain `serif` (negative assertion against the pre-Step-9 Charter/Georgia stack)
-     - Assert it contains `Geneva` (or whatever Classicy-shipped name you used in step 4)
-     - **Plus the false-green guards from Step 6:**
-       - `await page.evaluate(() => document.fonts.ready)`
-       - `document.fonts.check('16px Geneva')` (or whatever family you used) → expect `true`
-       - Canvas `measureText` width comparison: render `'Body Width Sample'` at 16px in your declared family vs at 16px in `sans-serif`. Assert the two widths are NOT close (`expect(...).not.toBeCloseTo(..., 0)`). If your fallback is `sans-serif` itself, use `monospace` as the comparison so you're comparing against a different font, not the same one.
-     - The existing heading assertions (Chicago, unsmoothed, integer pixel) all stay untouched.
+   In place of automated tests, this step relies on a **mandatory
+   manual browser verification** documented in the Verify subsection.
+   The Geneva font check is the highest-risk item (see the false-green
+   warning under item 4) and the manual check exists specifically to
+   catch it before commit.
 
 ### Files modified / created
 
@@ -990,8 +1024,28 @@ not to investigate.
 - New: `app/components/ContactWindow.tsx`
 - Modified: `app/components/ClassicyDesktopInner.tsx` (register About + Contact icons)
 - Modified: `app/components/post-body.module.css` (Geneva body font)
-- New: `tests/e2e/desktop-windows.spec.ts`
-- Modified: `tests/e2e/typography.spec.ts`
+- **No test files modified or created.** Tests land in Step 10.
+
+### Test specs for Step 10
+
+These are the assertions Step 10 will implement.
+
+- **`desktop-windows.spec.ts` (new in Step 10):**
+  - Desktop has icons labeled exactly `About` and `Contact`
+  - Double-clicking About opens a window containing the substring `Rod Machen`
+  - Double-clicking Contact opens a window containing the substring `github.com/rodmachen`
+  - Both sub-windows render above the Reader (z-index check or DOM stacking order)
+  - About sub-window content is **different** from the Apple menu's "About This Site" modal (different substring assertion)
+
+- **`typography.spec.ts` body-font additions (Step 10):**
+  - Select an element inside `.blogPostBody` that is NOT a heading (e.g. a paragraph). Read its computed `font-family`.
+  - Assert it does NOT contain `serif` (negative assertion against the pre-Step-9 Charter/Georgia stack)
+  - Assert it contains `Geneva` (or whatever Classicy-shipped name Step 9 actually used)
+  - **Plus the Step 6 false-green guards:**
+    - `await page.evaluate(() => document.fonts.ready)`
+    - `document.fonts.check('16px Geneva')` (or whatever family Step 9 used) → expect `true`
+    - Canvas `measureText` width comparison: render `'Body Width Sample'` at 16px in the declared family vs at 16px in a different family. Assert the two widths are NOT close (`expect(...).not.toBeCloseTo(..., 0)`). If the fallback is `sans-serif`, use `monospace` as the comparison so you're comparing against a different font, not the same one.
+  - The existing heading assertions (Chicago, unsmoothed, integer pixel) all stay untouched.
 
 ### Verify
 
@@ -1000,7 +1054,16 @@ not to investigate.
 - `npm run lint` — clean
 - `npm test` — unit suite passes
 - `npm run build` — succeeds
-- `npm run test:e2e` — all suites pass, including `desktop-windows.spec.ts` and the updated `typography.spec.ts`
+- `npm run test:e2e` — **all existing tests still pass.** No new tests
+  in this step.
+- **MANDATORY manual browser check (substitutes for the deferred font
+  test):**
+  1. Run `npm run dev` and visit `/posts/typography-test`
+  2. Open browser dev tools → Elements → select a paragraph in the post body
+  3. Read computed `font-family` — it must NOT be `Charter`/`Georgia`/`serif`
+  4. The body text must visibly look different from how it looked before this step (Charter/Georgia is a serif; Geneva is a sans-serif — the visual difference is unmistakable)
+  5. Open dev tools → Console → run `document.fonts.check('16px Geneva')` — expect `true` if you used Geneva, or substitute the family name you actually shipped
+  6. **Report all five checks in your reply.** If any check fails, do not declare the step done.
 
 ### Commit message
 
@@ -1015,6 +1078,14 @@ not to investigate.
 > **Starting state:** branch `feature/classicy-phase-1`. Steps 1–8 have
 > landed. Steps 7 and 8 produced the patterns you'll be copying.
 >
+> **CRITICAL — tests are deferred to Step 10.** Do not write or modify
+> any test files in this step. Specifically: do NOT create
+> `tests/e2e/desktop-windows.spec.ts`, do NOT modify
+> `tests/e2e/typography.spec.ts`. Step 10's executor will write those
+> against the spec already documented in this step. Your only test
+> obligation is that all **existing** Playwright tests still pass after
+> your changes.
+>
 > **Required reading before you write any code:**
 > 1. `app/components/ClassicyDesktopInner.tsx` — for the exact desktop
 >    icon registration shape Step 8 established. Match it precisely for
@@ -1023,20 +1094,22 @@ not to investigate.
 >    pattern Step 8 established (`ClassicyApp` + `ClassicyWindow`,
 >    `ClassicyAppOpen` dispatch on mount). Copy this pattern for
 >    `AboutWindow.tsx` and `ContactWindow.tsx`.
-> 3. `tests/e2e/typography.spec.ts` — for the existing Step 6 false-green
->    guards (`document.fonts.check` + canvas width comparison). You'll
->    add the same shape of guard for the body font.
-> 4. `node_modules/classicy/dist/classicy.css` — grep for `Geneva` and
+> 3. `node_modules/classicy/dist/classicy.css` — grep for `Geneva` and
 >    for `@font-face`. Determine whether Classicy ships Geneva inline.
 >    Report what you found.
 >
-> **Build the four deliverables** in the "Items to land" list. Heed the
-> CRITICAL false-green warning on the Geneva font: do NOT download or
-> ship a font file. Use Classicy's font if it ships one; otherwise use
-> the system fallback chain. **Step 6 had an incident where a 14-byte
-> 404 response was saved as `ChicagoFLF.ttf` and the test still passed
-> because `getComputedStyle().fontFamily` returns the declared string,
-> not the resolved font.** Do not repeat that.
+> **Build the three code deliverables** from items 1–4 in the "Items to
+> land" list (the two new components + the desktop icon registration +
+> the CSS font swap). Skip item 5 ("Tests") entirely — that's Step 10.
+>
+> **Heed the CRITICAL false-green warning on the Geneva font:** do NOT
+> download or ship a font file. Use Classicy's font if it ships one;
+> otherwise use the system fallback chain. **Step 6 had an incident
+> where a 14-byte 404 response was saved as `ChicagoFLF.ttf` and the
+> test still passed because `getComputedStyle().fontFamily` returns the
+> declared string, not the resolved font.** Do not repeat that. Because
+> tests are deferred this round, the manual browser check below is the
+> ONLY safety net — take it seriously.
 >
 > **Verification (run all of these and paste output):**
 > 1. `npm run content:build`
@@ -1044,45 +1117,197 @@ not to investigate.
 > 3. `npm run lint`
 > 4. `npm test`
 > 5. `npm run build`
-> 6. `npm run test:e2e` — include the full test output, especially
->    `desktop-windows.spec.ts` and `typography.spec.ts`
+> 6. `npm run test:e2e` — all existing tests must still pass; no new
+>    test files
+>
+> **MANDATORY manual browser check** (substitutes for the deferred font
+> test, run after the automated checks above):
+> 1. `npm run dev`, visit `/posts/typography-test`
+> 2. Dev tools → Elements → select a paragraph in the post body
+> 3. Read computed `font-family` — it must NOT contain `Charter`,
+>    `Georgia`, or `serif`
+> 4. Body text must visibly look like a sans-serif (Geneva is sans;
+>    Charter/Georgia were serif — the difference is obvious)
+> 5. Dev tools → Console → run `document.fonts.check('16px Geneva')`
+>    (or substitute the family name you actually used) — expect `true`
 >
 > **Do not commit or push.** Reply with:
 > (1) files created/modified,
 > (2) which path you took for the Geneva font (Classicy-shipped name vs
 >     system fallback) and what you found in `classicy.css`,
-> (3) full output of all six verification commands,
-> (4) anything you noticed but chose not to fix (Opus will triage).
+> (3) full output of all six automated verification commands,
+> (4) **the result of all five manual browser check steps**, including
+>     the literal computed `font-family` string and the
+>     `document.fonts.check` boolean,
+> (5) anything you noticed but chose not to fix (Opus will triage).
 
 ---
 
-## Step 10 — Vercel preview deploy + bundle measurement
+## Step 10 — Test catch-up (all deferred UI tests)
+
+**Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
+**Test posture:** **tests-only.** No production code changes (except
+incidental data-testid attribute additions if a spec needs a stable hook
+that doesn't exist in the components yet — Opus approves any such
+additions during review).
+
+This step exists because Steps 7, 8, 9 (and any additional UI steps
+inserted between 9 and 10) deferred their tests. Step 10 implements
+every test contract documented in those steps' "Test specs for Step 10"
+subsections.
+
+**Note for plan readers:** if more UI iteration steps land between 9
+and 10, they should each carry their own "Test specs for Step 10"
+subsection following the same pattern. Step 10 absorbs whatever has
+accumulated by the time it runs — it is the last UI-related step before
+deploy. The test posture for any new UI step is **always** "tests
+deferred to Step 10," not "tests-alongside."
+
+### Items to land
+
+For each UI step that ran between Step 6 and Step 10, locate its "Test
+specs for Step 10" subsection in `docs/plans/phase-1.md` and implement
+every assertion as Playwright tests. As of the current plan that means:
+
+1. **`tests/e2e/chrome.spec.ts` (new) — Step 7's spec.** All eleven
+   assertions in Step 7's "Test specs for Step 10" subsection. The File
+   → Open assertion implements Step 8's "opens listings window" form,
+   not the Step 7 stub form (because by Step 10, Step 8 has already
+   rewired File → Open).
+
+2. **`tests/e2e/posts-listings.spec.ts` (new) — Step 8's spec.** All
+   five assertions in Step 8's "Test specs for Step 10" subsection.
+
+3. **`tests/e2e/blog.spec.ts` (rewrite) — Step 8's spec.** Replace what
+   Step 8 stripped down to: just the Reader-shows-the-correct-post
+   assertions and the deep-link nav assertion. Sidebar code is gone, so
+   sidebar assertions stay gone.
+
+4. **`tests/e2e/desktop-windows.spec.ts` (new) — Step 9's spec.** All
+   five assertions.
+
+5. **`tests/e2e/typography.spec.ts` (extend) — Step 9's spec.** Add the
+   body-font assertions on top of the existing heading assertions. Heading
+   assertions remain untouched. **Use the Step 6 false-green guards** —
+   `document.fonts.ready`, `document.fonts.check`, canvas width
+   comparison. The plan's Step 9 "Test specs for Step 10" subsection
+   gives you the exact pattern.
+
+6. **Any other test specs** documented in UI steps inserted between 9
+   and 10. Read every step's spec subsection — do not miss any.
+
+### Files modified / created
+
+- New: `tests/e2e/chrome.spec.ts`
+- New: `tests/e2e/posts-listings.spec.ts`
+- New: `tests/e2e/desktop-windows.spec.ts`
+- Modified: `tests/e2e/blog.spec.ts` (full rewrite — pared-down post-Step-8)
+- Modified: `tests/e2e/typography.spec.ts` (body-font additions)
+- Possibly modified: a small number of `app/components/*.tsx` files to
+  add `data-testid` attributes if a spec needs a stable hook. Each such
+  addition must be a one-line attribute, not a behavior change. Opus
+  approves these in review.
+
+### Verify
+
+- `npm run content:build` — clean
+- `npx tsc --noEmit` — clean
+- `npm run lint` — clean
+- `npm test` — unit suite passes
+- `npm run build` — succeeds
+- `npm run test:e2e` — **every** spec passes, including all five test
+  files above
+- For each test that asserts on a font, the false-green guards from
+  Step 6 are present (`document.fonts.check` + canvas width comparison)
+  — Opus verifies this in review
+
+### Commit message
+
+`Step 10: Test catch-up for deferred UI tests`
+
+### Gemini prompt
+
+> You are executing **Step 10** of the Phase 1 plan for `code.rodmachen.com`.
+> Read `docs/plans/phase-1.md` for full context — your scope is the
+> "Step 10 — Test catch-up" section only.
+>
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–9 (and
+> possibly additional UI iteration steps) have landed. The full Phase 1
+> UI is working in the browser but most of it has no automated test
+> coverage yet. Your job is to write that coverage.
+>
+> **CRITICAL — this is a tests-only step.** Do not change any production
+> code in `app/`, `content/`, `velite.config.ts`, `next.config.mjs`, or
+> any config file. The only production-code change you may propose is
+> adding a `data-testid` attribute to a component if you cannot find a
+> stable selector — and even then, flag it in your reply so Opus can
+> approve it during review rather than committing it silently.
+>
+> **Required reading before you write any tests:**
+> 1. Every "Test specs for Step 10" subsection in `docs/plans/phase-1.md`
+>    — there is one in Step 7, one in Step 8, and one in Step 9 (and
+>    possibly more in any UI iteration steps between 9 and 10). These
+>    are your contract.
+> 2. `tests/e2e/typography.spec.ts` — for the existing Step 6 false-green
+>    guards (`document.fonts.check` + canvas width comparison). Use the
+>    same shape for any new font assertions.
+> 3. `tests/e2e/blog.spec.ts` and `tests/e2e/smoke.spec.ts` — for
+>    Playwright patterns and the audio-sprite console-error filter that
+>    every spec in this repo uses.
+> 4. The relevant components in `app/components/` — to find stable
+>    selectors. Prefer existing `data-testid` attributes; only ask for
+>    new ones if nothing exists.
+>
+> **Build the five test files** listed in "Items to land". Implement
+> every assertion in every spec subsection. Do not skip assertions. Do
+> not invent new assertions that aren't in the spec.
+>
+> **Verification (run all of these and paste output):**
+> 1. `npm run content:build`
+> 2. `npx tsc --noEmit`
+> 3. `npm run lint`
+> 4. `npm test`
+> 5. `npm run build`
+> 6. `npm run test:e2e` — paste the full output, every spec must pass
+>
+> **Do not commit or push.** Reply with:
+> (1) test files created/modified,
+> (2) any `data-testid` attributes you needed to add (Opus approves
+>     each one before commit),
+> (3) full output of all six verification commands,
+> (4) any test spec from the plan that you couldn't implement and why,
+> (5) any flaky tests you observed (run `npm run test:e2e` twice to
+>     check).
+
+---
+
+## Step 11 — Vercel preview deploy + bundle measurement
 
 **Executor:** Gemini 3.1 Pro (mechanical) + Opus (interpret) + User (Vercel setup) · **Reviewer:** Opus
 **Test posture:** tests-alongside
 
 Phase 1's exit criterion is a working preview URL. Per pre-plan §5.8, do
 **not** touch the production `code.rodmachen.com` DNS in this phase
-(decision pending — see §10d).
+(decision pending — see §11d).
 
-Step 10 has four sub-steps with explicit ordering. 10a (user) and 10b
-(Gemini) are independent and can run in parallel; 10c and 10d are
+Step 11 has four sub-steps with explicit ordering. 11a (user) and 11b
+(Gemini) are independent and can run in parallel; 11c and 11d are
 strictly sequential and must wait for both.
 
 Files created/modified across the whole step:
 - `package.json` — add `@next/bundle-analyzer` as a dev dep, add
-  `npm run analyze` script (10b)
-- `next.config.mjs` — wire the analyzer behind `ANALYZE=true` (10b)
+  `npm run analyze` script (11b)
+- `next.config.mjs` — wire the analyzer behind `ANALYZE=true` (11b)
 - PR description — record preview URL, bundle numbers, top-10 chunks,
-  any deployed-preview console warnings (10d)
+  any deployed-preview console warnings (11d)
 
-**Commit message:** `Step 10: Vercel preview deploy and bundle measurement`
+**Commit message:** `Step 11: Vercel preview deploy and bundle measurement`
 
 ---
 
-### Step 10a — Vercel project setup (User, one-time)
+### Step 11a — Vercel project setup (User, one-time)
 
-**Owner:** User. Cannot be done by Gemini or Opus. Can run in parallel with 10b.
+**Owner:** User. Cannot be done by Gemini or Opus. Can run in parallel with 11b.
 
 1. In the Vercel dashboard, create a new project from the
    `rodmachen/code-rodmachen-com` GitHub repo.
@@ -1092,19 +1317,19 @@ Files created/modified across the whole step:
 3. Confirm the framework preset auto-detects as **Next.js**.
 4. Set the production branch to `main` so feature-branch pushes produce
    *preview* deploys, not production deploys.
-5. **Do not assign a custom domain yet.** The DNS decision lives in 10d.
+5. **Do not assign a custom domain yet.** The DNS decision lives in 11d.
 6. Report back to Opus: the project URL (e.g.
    `vercel.com/<team>/code-rodmachen-com`) and confirmation that the
    framework preset is Next.js.
 
-**Verify (10a):** Vercel project exists, is connected to the GitHub repo,
+**Verify (11a):** Vercel project exists, is connected to the GitHub repo,
 production branch is `main`, no custom domain assigned.
 
 ---
 
-### Step 10b — Bundle analyzer + local measurement (Gemini 3.1 Pro)
+### Step 11b — Bundle analyzer + local measurement (Gemini 3.1 Pro)
 
-**Owner:** Gemini 3.1 Pro. Can run in parallel with 10a. Does **not**
+**Owner:** Gemini 3.1 Pro. Can run in parallel with 11a. Does **not**
 touch git or Vercel.
 
 Mechanical work — see the "Gemini prompt" subsection below for the exact
@@ -1115,17 +1340,17 @@ deliverables. Outputs:
 - Pass/fail of Playwright e2e against a **production** build (`next start`,
   not `next dev`)
 
-**Verify (10b):** Gemini's reply includes all five deliverables listed in
+**Verify (11b):** Gemini's reply includes all five deliverables listed in
 the prompt, with raw build output pasted (not summarized).
 
 ---
 
-### Step 10c — Review, commit, push (Opus)
+### Step 11c — Review, commit, push (Opus)
 
-**Owner:** Opus. **Strict prerequisite: 10a AND 10b are both done.**
+**Owner:** Opus. **Strict prerequisite: 11a AND 11b are both done.**
 
 Why both: pushing the commit triggers a Vercel deploy, and that deploy
-needs a Vercel project to land in (10a). Pushing without 10a would just
+needs a Vercel project to land in (11a). Pushing without 11a would just
 sit on GitHub with no preview URL.
 
 1. Re-run all of Gemini's verification commands locally (per the project's
@@ -1133,17 +1358,17 @@ sit on GitHub with no preview URL.
    `npm run build`, `ANALYZE=true npm run build`, e2e against
    `next start`.
 2. Stage Gemini's `package.json` and `next.config.mjs` changes.
-3. Commit with the Step 10 message.
+3. Commit with the Step 11 message.
 4. Push the branch. The Vercel GitHub integration auto-creates a preview
-   deploy against the new project from 10a.
+   deploy against the new project from 11a.
 5. Wait for the Vercel deploy to finish; capture the preview URL.
 
-**Verify (10c):** local runs all green, commit pushed, Vercel preview URL
+**Verify (11c):** local runs all green, commit pushed, Vercel preview URL
 returned (typically `code-rodmachen-com-<hash>-<team>.vercel.app`).
 
 ---
 
-### Step 10d — Preview verification + interpretation + DNS decision (Opus + User)
+### Step 11d — Preview verification + interpretation + DNS decision (Opus + User)
 
 **Owner:** Opus interprets the numbers and verifies the preview; User
 decides whether to assign the custom domain.
@@ -1175,19 +1400,19 @@ decides whether to assign the custom domain.
    exact records), and record the cutover in the PR description as a
    scope deviation from the original plan.
 
-**Verify (10d):** preview URL renders cleanly, PR description updated,
+**Verify (11d):** preview URL renders cleanly, PR description updated,
 DNS decision recorded one way or the other.
 
 ### Gemini prompt (mechanical half only — Opus interprets the numbers)
 
-> You are executing the **mechanical half of Step 10** (sub-step 10b)
+> You are executing the **mechanical half of Step 11** (sub-step 11b)
 > of the Phase 1 plan for `code.rodmachen.com`. Read `docs/plans/phase-1.md`
 > for full context. Your scope is **bundle analysis and measurement only**
-> — the Vercel project setup (10a) and the decision about whether the
-> bundle numbers are acceptable (10d) are not your call.
+> — the Vercel project setup (11a) and the decision about whether the
+> bundle numbers are acceptable (11d) are not your call.
 >
-> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–9 have
-> landed. The full Phase 1 UI is working locally.
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–10 have
+> landed. The full Phase 1 UI is working locally and is fully tested.
 >
 > **Deliverables:**
 >
@@ -1241,8 +1466,8 @@ DNS decision recorded one way or the other.
 >
 > **Vercel deploy setup is NOT your job.** The user creates the new Vercel
 > project (`code-rodmachen-com`) manually from the GitHub repo in
-> sub-step 10a. Do not run any `vercel` CLI commands or touch Vercel
-> configuration. Your scope is sub-step 10b only — the bundle analyzer
+> sub-step 11a. Do not run any `vercel` CLI commands or touch Vercel
+> configuration. Your scope is sub-step 11b only — the bundle analyzer
 > wiring and the local measurement runs.
 
 ---
@@ -1277,7 +1502,7 @@ Phase 1 is done when **all** of the following are true:
    enforcement yet — that's a Phase 2 decision)
 10. The production `code.rodmachen.com` DNS decision is recorded in the
     PR description (either "untouched per plan" or "cut over with the
-    user's explicit approval in §10d")
+    user's explicit approval in §11d")
 
 When all ten hold, the PR is ready for human review. After merge,
 Phase 2 picks up: theme/sound decisions, content migration from the old
@@ -1299,19 +1524,18 @@ DNS cutover.
 | 7 — Chrome and menu bars | **Opus** | Opus |
 | 8 — Multi-window architecture | **Opus** | Opus |
 | 9 — About/Contact + Geneva font | Gemini 3.1 Pro | Opus |
-| 10 — Deploy + measure | Gemini (mechanical) + Opus (interpret) + User (Vercel + DNS) | Opus |
+| (UI iteration steps may be inserted here — usually **Opus**) | | |
+| 10 — Test catch-up (deferred UI tests) | Gemini 3.1 Pro | Opus |
+| 11 — Deploy + measure | Gemini (mechanical) + Opus (interpret) + User (Vercel + DNS) | Opus |
 
 **Model switches happen between Steps 2→3, 3→4, 4→5, 5→6, 6→7, 8→9,
-and 9→10b.** At each switch the user stops and changes the active model
-in Claude Code, then runs the corresponding Gemini prompt (from the
-step's "Gemini prompt" subsection) in a separate Gemini session, then
-pastes Gemini's reply back into a Claude Code session for Opus to review
-and commit. Steps 3, 5, 7, and 8 run entirely in Claude Code with Opus
-(7→8 is Opus→Opus, no switch). Step 9 → Step 10b is technically a
-Gemini→Gemini transition, but there is an Opus review/commit between
-them, so the user will switch to Opus for the Step 9 review, then back
-to Gemini for Step 10b — same handoff cadence as every other Gemini
-step.
+and (after any inserted UI iteration steps) when entering Step 10 and
+again entering Step 11b.** At each switch the user stops and changes
+the active model in Claude Code, then runs the corresponding Gemini
+prompt (from the step's "Gemini prompt" subsection) in a separate
+Gemini session, then pastes Gemini's reply back into a Claude Code
+session for Opus to review and commit. Steps 3, 5, 7, 8 (and any
+inserted UI iteration steps) run entirely in Claude Code with Opus.
 
 ---
 
