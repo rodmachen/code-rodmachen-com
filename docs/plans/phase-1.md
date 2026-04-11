@@ -50,7 +50,7 @@ These are **not** Phase 1 blockers but should be revisited before public launch.
    in App Router must wrap it in a client boundary themselves. → Step 3
    establishes that boundary.
 3. **Pre-1.0 framework (0.6.54).** → Pin the exact version, no caret.
-4. **Bundle weight unknown.** → Step 7 captures a measurement and records
+4. **Bundle weight unknown.** → Step 10 captures a measurement and records
    it in the PR description. Budget enforcement deferred to Phase 2.
 
 ---
@@ -63,16 +63,21 @@ Each role has a well-defined lane.
 **Opus (Claude Code, this agent):**
 - Owns this plan document and keeps it current
 - Writes the Gemini prompts for each Gemini-eligible step
-- **Executes Steps 3 and 5 directly** (framework spike and Model A shell)
+- **Executes Steps 3, 5, 7, and 8 directly** (framework spike, Model A
+  shell, chrome/menu wiring with Classicy API investigation, and the
+  multi-window architectural refactor)
 - **Reviews Gemini's output** for every Gemini-executed step: reads the
   diff, re-runs the verification commands locally, and catches drift
   between "works on Gemini's machine" and "works here"
 - **Owns all git actions** — stage, commit, push, open/update the PR
-- Interprets the bundle numbers Gemini produces in Step 7
+- **Fills in Step 9's prompt with the exact API patterns produced by
+  Steps 7 and 8** before handoff (without that, Step 9 isn't really a
+  Gemini task)
+- Interprets the bundle numbers Gemini produces in Step 10
 
 **Gemini 3.1 Pro:**
 - Executes mechanical scaffolding and implementation work for Steps
-  1, 2, 4, 6, and the mechanical half of Step 7
+  1, 2, 4, 6, 9, and the mechanical half of Step 10 (sub-step 10b)
 - Reads this plan file as its source of truth for each step
 - Produces files and pastes verification command output
 - **Does not touch git.** No staging, no commits, no pushes. Just writes
@@ -80,10 +85,11 @@ Each role has a well-defined lane.
 
 **User (Rod):**
 - Switches the active model in Claude Code between Opus-owned steps
-  (3, 5) and Gemini-executed steps (1, 2, 4, 6, 7-mechanical)
+  (3, 5, 7, 8) and Gemini-executed steps (1, 2, 4, 6, 9, 10-mechanical)
 - Runs the Gemini prompts in a separate Gemini session
 - Pastes Gemini's reply back into Claude Code so Opus can review and commit
-- Performs the one-time Vercel project setup in Step 7
+- Performs the one-time Vercel project setup in Step 10 (sub-step 10a)
+- Makes the DNS-cutover call in Step 10 (sub-step 10d)
 - Reviews and merges the PR
 
 **Verification policy:** Gemini runs the per-step verification commands
@@ -729,55 +735,458 @@ Files created/modified:
 
 ---
 
-## Step 7 — Vercel preview deploy + bundle measurement
+## Step 7 — Chrome, menu bars, and window framing
 
-**Executor:** Gemini 3.1 Pro (mechanical) + Opus (interpret) · **Reviewer:** Opus
+**Executor:** Opus · **Reviewer:** Opus
+**Test posture:** tests-alongside
+
+UI polish on top of Steps 5–6: fix layout chrome, define the four menu
+bars properly, position desktop chrome (clock, speaker, hard drive icon),
+and add the View → Full Width / Normal zoom toggle.
+
+This is all Classicy-config / wiring work. No architectural changes —
+that comes in Step 8.
+
+### Items to land
+
+1. **Window framing.**
+   - BlogWindow centered horizontally
+   - Full height below the menu bar
+   - Max-width 1000px (this is the "Normal" zoom state)
+   - Fix the **double menu bar** currently visible (find the source — Classicy renders one, something else is rendering a second)
+   - Fix the **stray white border** on the top and left
+
+2. **Apple menu.**
+   - Single item: **About This Site**
+   - Opens a small Classicy window with the tech stack: Next.js 16, Classicy, Velite, Shiki, Playwright, deployed on Vercel, plus a link to the GitHub repo
+   - This is **distinct** from the desktop About icon (Step 8) — Apple menu is brief credits; desktop About is the full About page
+
+3. **File menu.**
+   - Single item: **Open...** (no keyboard shortcut)
+   - In Step 7, this is **stubbed** — wire it to dispatch an action with a no-op handler (or open a placeholder alert). Step 8 will replace the handler with "open the Posts listings window."
+
+4. **Edit menu.**
+   - Single item: **Edit Posts**, permanently **disabled** (greyed, not clickable, `aria-disabled` or Classicy equivalent)
+
+5. **View menu.**
+   - Two items: **Normal** and **Full Width**
+   - Toggles the BlogWindow max-width between 1000px (Normal) and 100% (Full Width)
+   - **Resets on navigation** — when the user navigates to a different post (URL change), the toggle returns to Normal
+   - To satisfy `react-hooks/set-state-in-effect`, implement reset via a `key` prop on the inner window component that includes the current slug. No `useState` in `useEffect`.
+
+6. **Help menu.**
+   - Single item: **Help me…**
+   - On click: opens https://www.google.com in a new tab (`window.open(url, '_blank')`)
+
+7. **No keyboard shortcuts on any menu item** in any of the four menus. If Classicy's menu config supports a shortcut field, leave it empty / undefined.
+
+8. **Desktop chrome.**
+   - Clock: format `H:MM AM/PM`, **no seconds**. The clock is JS `new Date()` in the browser, so it's the visitor's local time — no server involvement.
+   - Speaker icon: positioned **to the left of the clock** in the menu bar
+   - Speaker default state: **muted** (sound system fully off until user clicks unmute, after which Classicy's normal sound effects resume)
+   - Macintosh HD desktop icon: relabel to **Hard Drive**
+
+### Implementation notes (investigation expected)
+
+- Classicy's menu definition API isn't documented in the README. Read the compiled `node_modules/classicy/dist/classicy.es.js` to find the right shape (likely a config object passed to `ClassicyDesktop` or per-app menu defs on `ClassicyApp`).
+- The double menu bar is most likely Classicy's menu bar plus an inadvertent second bar from our own JSX or default theme styling. Inspect the rendered DOM in dev tools first.
+- The white border is probably a default body/html margin or Classicy desktop padding. CSS reset or theme tweak.
+- For the speaker default-muted state, look for a Classicy store action like `ClassicySoundManagerMute` or a prop on the sound manager provider. If neither exists, dispatch the mute on mount (same pattern as Step 5's `ClassicyAppOpen`).
+
+### Files modified / created
+
+- `app/components/BlogWindow.tsx` — window sizing, menu definitions, View toggle
+- `app/components/ClassicyDesktopInner.tsx` — desktop chrome (clock format, speaker, HD label, default mute dispatch)
+- `app/components/blog-window.css` — extend with framing/centering rules
+- New: `app/components/AboutThisSiteWindow.tsx` — small Classicy window with tech stack
+- New: `tests/e2e/chrome.spec.ts`
+- Possibly new: `app/globals.css` or extend `app/layout.tsx` to reset the white border
+
+### Tests (`tests/e2e/chrome.spec.ts`, tests-alongside)
+
+- Exactly one menu bar in DOM
+- BlogWindow is horizontally centered and `<= 1000px` wide at default zoom
+- All four custom menus present with the documented items, no keyboard shortcut text
+- Edit → Edit Posts present and `aria-disabled` (or Classicy equivalent)
+- View → Full Width removes the 1000px constraint; View → Normal restores it
+- Navigating to a different post resets View to Normal
+- Clock text matches `/\d{1,2}:\d{2}\s?(AM|PM)/i` and does NOT contain a seconds pattern
+- Speaker icon precedes clock in DOM order; speaker default state is muted
+- Desktop has an icon labeled `Hard Drive` and none labeled `Macintosh HD`
+- Apple menu → About This Site opens a window containing the substring `Next.js`
+- Help → Help me… invokes `window.open` with `https://www.google.com` and `_blank` (capture via `page.context().on('page', ...)`)
+
+### Verify
+
+- `npm run content:build` — clean
+- `npx tsc --noEmit` — clean
+- `npm run lint` — clean
+- `npm test` — unit suite passes
+- `npm run build` — succeeds
+- `npm run test:e2e` — `chrome.spec.ts` plus all existing pass
+
+### Commit message
+
+`Step 7: Chrome, menu bars, and window framing`
+
+---
+
+## Step 8 — Multi-window architecture (Reader + Posts listings)
+
+**Executor:** Opus · **Reviewer:** Opus
+**Test posture:** tests-alongside
+
+This is the **architectural change** of Phase 1's UI work: move from
+Model A (single window with sidebar + reading pane) to a multi-window
+model with a dedicated Posts listings window and a post-only Reader.
+
+The About/Contact sub-windows and the Geneva body-font swap are
+**deliberately deferred to Step 9** so that step is a clean, mechanical
+Gemini task that follows patterns this step establishes.
+
+### Window model (locked)
+
+- **Reader window.** Post body only. No sidebar. Reads slug from pathname; URL drives selection (the existing deep-link behavior from Step 5 is preserved).
+- **Posts listings window.** Finder-style file-list view of all posts. Columns: **Name**, **Date Added**, **Tags**. Default sort: date descending. Opens via File → Open… (replacing Step 7's stub). Closed by default on initial page load.
+- **Single Reader, no spawning.** Selecting a post in the listings updates the URL, which drives the existing Reader to display the new post. It does **not** spawn a new Reader window.
+
+### Items to land
+
+1. **Refactor Reader.**
+   - Rename `BlogWindow.tsx` → `PostReaderWindow.tsx` (or create new + delete old)
+   - Strip out all sidebar code; the component is now post-body only
+   - Keep the `ClassicyAppOpen` dispatch from Step 5
+
+2. **Posts listings window.**
+   - New `app/components/PostListingsWindow.tsx`
+   - Renders inside its own `ClassicyApp` + `ClassicyWindow`
+   - Investigate first: does Classicy ship a built-in file-list-view component? If yes, use it. If not, build a minimal three-column table.
+   - Each row's primary action is `router.push('/posts/' + slug)`
+   - Tags column renders comma-separated tags (Phase 1 keeps it simple; pill rendering is Phase 2)
+   - **Closed by default.** Step 7's File → Open handler is rewired to dispatch the action that opens this window.
+
+3. **Apple menu's "About This Site" stays as Step 7 left it.** Different content, different window — Step 9 will add the desktop About sub-window separately and they should not be merged.
+
+### Files modified / created
+
+- New: `app/components/PostReaderWindow.tsx`
+- Delete: `app/components/BlogWindow.tsx`
+- New: `app/components/PostListingsWindow.tsx`
+- Modified: `app/components/ClassicyDesktopInner.tsx` (register the listings window; rewire File → Open handler)
+- Modified: `tests/e2e/blog.spec.ts` (drop sidebar assertions; what remains is just "Reader displays the correct post for the URL")
+- Modified: `tests/e2e/chrome.spec.ts` (rewire the File → Open assertion from "stubbed" to "opens listings window")
+- New: `tests/e2e/posts-listings.spec.ts`
+
+### Tests
+
+- **`posts-listings.spec.ts`:**
+  - File → Open opens the Posts listings window
+  - Listings shows both posts with their Name, Date Added, and Tags columns populated
+  - Clicking a row navigates to `/posts/[slug]` and the Reader displays the new post
+  - Listings window remains visible after selection (single-Reader model)
+  - Direct nav to `/posts/typography-test` still selects it in the Reader (deep-link preserved)
+
+- **`blog.spec.ts` updates:**
+  - Remove all sidebar selectors and the in-window navigation tests (those move to `posts-listings.spec.ts`)
+  - Keep: Reader displays the correct post for the URL; deep-link nav works
+
+### Verify
+
+- `rm -rf .velite .next` — clean checkout
+- `npm run content:build` — clean
+- `npx tsc --noEmit` — clean
+- `npm run lint` — clean
+- `npm test` — unit suite passes
+- `npm run build` — succeeds, still emits the SSG post routes
+- `npm run test:e2e` — all suites pass (smoke, chrome, blog, typography, posts-listings)
+- **Manual smoke:** open `/`, verify Reader shows most recent post; File → Open opens the listings; click a row, verify URL changes and Reader updates.
+
+### Handoff to Step 9
+
+After Step 8 lands, **Opus must update Step 9's Gemini prompt below with
+two pieces of information** before handing off:
+
+1. **The exact Classicy desktop-icon registration API** (whatever shape
+   `ClassicyDesktopInner.tsx` ended up using to add the listings entry
+   point — Step 9 will use the same shape to add About + Contact icons).
+2. **The exact pattern for building a small Classicy window** (whatever
+   shape `PostListingsWindow.tsx` ended up using — Step 9 will copy it
+   for `AboutWindow.tsx` and `ContactWindow.tsx`).
+
+This is the contract that makes Step 9 a real Gemini task instead of a
+research project. If Opus doesn't fill these in before Step 9 starts,
+Gemini will either guess (false-green risk) or stop and wait.
+
+### Commit message
+
+`Step 8: Multi-window architecture (Reader + Posts listings)`
+
+---
+
+## Step 9 — About/Contact sub-windows + Geneva body font
+
+**Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
+**Test posture:** tests-alongside
+
+A purely mechanical wrap-up step. By the time Step 9 starts, every
+Classicy API needed has been documented (Step 7's chrome work covered
+desktop icons + windows, Step 8's multi-window work covered the
+sub-window pattern). Gemini's job is to copy patterns and write CSS,
+not to investigate.
+
+### Items to land
+
+1. **`AboutWindow.tsx` (new component).**
+   - A small Classicy window (~500×400) following the exact pattern Step 8 established for `PostListingsWindow.tsx`
+   - Stacks above the Reader window
+   - Plain HTML inside (no markdown pipeline needed)
+   - **Placeholder content (user will edit later):**
+     > Code is a coding-focused blog by Rod Machen, built on Next.js + Classicy + Velite. The retro Mac OS 8 look is deliberate.
+
+2. **`ContactWindow.tsx` (new component).**
+   - Same pattern as `AboutWindow.tsx`
+   - Smaller (~400×300)
+   - **Placeholder content:**
+     > Reach me on GitHub: github.com/rodmachen
+
+3. **Desktop icons for About and Contact.**
+   - In `app/components/ClassicyDesktopInner.tsx`, register two new desktop icons using the exact Classicy desktop-icon API documented in Step 8's handoff section above
+   - Both use the **document** icon variant (not folder, not application)
+   - Double-clicking each icon dispatches the action that opens its corresponding sub-window
+   - Icon labels: literally `About` and `Contact`
+
+4. **Geneva body font swap.**
+   - In `app/components/post-body.module.css`, change `.postBody`'s `font-family` from `Charter, Georgia, serif` to **`Geneva, "Lucida Grande", Verdana, sans-serif`**
+   - Headings remain Chicago (do **not** touch heading styles — Step 6 work is locked in)
+   - **CRITICAL — false-green warning from Step 6.** Before changing the CSS, do this investigation:
+     - Grep `node_modules/classicy/dist/` for any reference to Geneva or `@font-face` rules beyond the Chicago one
+     - If Classicy ships Geneva inline (parallel to its inline base64 ChicagoFLF), use the exact font-family name Classicy declares
+     - If Classicy does NOT ship Geneva, the system fallback chain above is the safest path — Mac users will see real Geneva, others will see a sans-serif fallback
+     - **DO NOT download or ship a Geneva font file.** Step 6 had an incident where a 14-byte 404 response was saved as `.ttf` and the test passed false-green because `getComputedStyle().fontFamily` returns the *declared* family string, not the *resolved* font. If you can't verify a font binary is a real font, don't ship it. Use the system fallback chain.
+   - Report in your reply: which path you took (Classicy-shipped vs system fallback) and why.
+
+5. **Tests.**
+
+   - **New `tests/e2e/desktop-windows.spec.ts`:**
+     - Desktop has icons labeled exactly `About` and `Contact`
+     - Double-clicking About opens a window containing the substring `Rod Machen`
+     - Double-clicking Contact opens a window containing the substring `github.com/rodmachen`
+     - Both sub-windows render above the Reader (z-index check or DOM stacking order)
+     - About sub-window content is **different** from the Apple menu's "About This Site" modal (different substring assertion)
+
+   - **`tests/e2e/typography.spec.ts` update — REQUIRED to follow the Step 6 hardening pattern:**
+     - Add: select an element inside `.blogPostBody` that is NOT a heading (e.g. a paragraph). Read its computed `font-family`.
+     - Assert it does NOT contain `serif` (negative assertion against the pre-Step-9 Charter/Georgia stack)
+     - Assert it contains `Geneva` (or whatever Classicy-shipped name you used in step 4)
+     - **Plus the false-green guards from Step 6:**
+       - `await page.evaluate(() => document.fonts.ready)`
+       - `document.fonts.check('16px Geneva')` (or whatever family you used) → expect `true`
+       - Canvas `measureText` width comparison: render `'Body Width Sample'` at 16px in your declared family vs at 16px in `sans-serif`. Assert the two widths are NOT close (`expect(...).not.toBeCloseTo(..., 0)`). If your fallback is `sans-serif` itself, use `monospace` as the comparison so you're comparing against a different font, not the same one.
+     - The existing heading assertions (Chicago, unsmoothed, integer pixel) all stay untouched.
+
+### Files modified / created
+
+- New: `app/components/AboutWindow.tsx`
+- New: `app/components/ContactWindow.tsx`
+- Modified: `app/components/ClassicyDesktopInner.tsx` (register About + Contact icons)
+- Modified: `app/components/post-body.module.css` (Geneva body font)
+- New: `tests/e2e/desktop-windows.spec.ts`
+- Modified: `tests/e2e/typography.spec.ts`
+
+### Verify
+
+- `npm run content:build` — clean
+- `npx tsc --noEmit` — clean
+- `npm run lint` — clean
+- `npm test` — unit suite passes
+- `npm run build` — succeeds
+- `npm run test:e2e` — all suites pass, including `desktop-windows.spec.ts` and the updated `typography.spec.ts`
+
+### Commit message
+
+`Step 9: About/Contact sub-windows and Geneva body font`
+
+### Gemini prompt
+
+> You are executing **Step 9** of the Phase 1 plan for `code.rodmachen.com`.
+> Read `docs/plans/phase-1.md` for full context — your scope is the
+> "Step 9 — About/Contact sub-windows + Geneva body font" section only.
+>
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–8 have
+> landed. Steps 7 and 8 produced the patterns you'll be copying.
+>
+> **Required reading before you write any code:**
+> 1. `app/components/ClassicyDesktopInner.tsx` — for the exact desktop
+>    icon registration shape Step 8 established. Match it precisely for
+>    About + Contact.
+> 2. `app/components/PostListingsWindow.tsx` — for the exact small-window
+>    pattern Step 8 established (`ClassicyApp` + `ClassicyWindow`,
+>    `ClassicyAppOpen` dispatch on mount). Copy this pattern for
+>    `AboutWindow.tsx` and `ContactWindow.tsx`.
+> 3. `tests/e2e/typography.spec.ts` — for the existing Step 6 false-green
+>    guards (`document.fonts.check` + canvas width comparison). You'll
+>    add the same shape of guard for the body font.
+> 4. `node_modules/classicy/dist/classicy.css` — grep for `Geneva` and
+>    for `@font-face`. Determine whether Classicy ships Geneva inline.
+>    Report what you found.
+>
+> **Build the four deliverables** in the "Items to land" list. Heed the
+> CRITICAL false-green warning on the Geneva font: do NOT download or
+> ship a font file. Use Classicy's font if it ships one; otherwise use
+> the system fallback chain. **Step 6 had an incident where a 14-byte
+> 404 response was saved as `ChicagoFLF.ttf` and the test still passed
+> because `getComputedStyle().fontFamily` returns the declared string,
+> not the resolved font.** Do not repeat that.
+>
+> **Verification (run all of these and paste output):**
+> 1. `npm run content:build`
+> 2. `npx tsc --noEmit`
+> 3. `npm run lint`
+> 4. `npm test`
+> 5. `npm run build`
+> 6. `npm run test:e2e` — include the full test output, especially
+>    `desktop-windows.spec.ts` and `typography.spec.ts`
+>
+> **Do not commit or push.** Reply with:
+> (1) files created/modified,
+> (2) which path you took for the Geneva font (Classicy-shipped name vs
+>     system fallback) and what you found in `classicy.css`,
+> (3) full output of all six verification commands,
+> (4) anything you noticed but chose not to fix (Opus will triage).
+
+---
+
+## Step 10 — Vercel preview deploy + bundle measurement
+
+**Executor:** Gemini 3.1 Pro (mechanical) + Opus (interpret) + User (Vercel setup) · **Reviewer:** Opus
 **Test posture:** tests-alongside
 
 Phase 1's exit criterion is a working preview URL. Per pre-plan §5.8, do
-**not** touch the production `code.rodmachen.com` DNS in this phase.
+**not** touch the production `code.rodmachen.com` DNS in this phase
+(decision pending — see §10d).
 
-Files created/modified:
+Step 10 has four sub-steps with explicit ordering. 10a (user) and 10b
+(Gemini) are independent and can run in parallel; 10c and 10d are
+strictly sequential and must wait for both.
+
+Files created/modified across the whole step:
 - `package.json` — add `@next/bundle-analyzer` as a dev dep, add
-  `npm run analyze` script
-- `next.config.mjs` — wire the analyzer behind `ANALYZE=true`
-- PR description — record:
-  - The Vercel preview URL
-  - First-load JS size (kB) for `/` and `/posts/[slug]` from the build output
-  - The bundle analyzer top-10 chunk list
-  - Any console errors or warnings in the deployed preview
+  `npm run analyze` script (10b)
+- `next.config.mjs` — wire the analyzer behind `ANALYZE=true` (10b)
+- PR description — record preview URL, bundle numbers, top-10 chunks,
+  any deployed-preview console warnings (10d)
 
-**Vercel project setup (user action, not Gemini, not Opus):**
-- User connects the GitHub repo to a new Vercel project named
-  `code-rodmachen-com-classicy` (distinct from any existing
-  `code-rodmachen-com` project so the production domain is unaffected)
-- User confirms the framework preset is "Next.js"
-- User does **not** assign a custom domain in this phase
+**Commit message:** `Step 10: Vercel preview deploy and bundle measurement`
 
-**Opus-only interpretation:**
-- Read the bundle numbers Gemini reports and judge whether they're in the
-  expected range per pre-plan §5.2 (rough expectation: 500KB+ gzipped JS).
-- If first-load JS for any route exceeds ~1MB gzipped, flag it in the PR
-  description and recommend a lazy-loading pass before Phase 2.
+---
 
-**Verify:**
-- Push the branch; the Vercel GitHub integration produces a preview URL
-- Visit the preview URL: home page loads, both posts render, sidebar
-  navigation works, no console errors
-- `ANALYZE=true npm run build` produces the bundle report
-- All Playwright tests pass against `npm run start` (production build, not dev)
+### Step 10a — Vercel project setup (User, one-time)
 
-**Commit message:** `Step 7: Vercel preview deploy and bundle measurement`
+**Owner:** User. Cannot be done by Gemini or Opus. Can run in parallel with 10b.
+
+1. In the Vercel dashboard, create a new project from the
+   `rodmachen/code-rodmachen-com` GitHub repo.
+2. Project name: **`code-rodmachen-com`** (matches the repo; the earlier
+   `-classicy` suffix was defensive against an imagined existing project
+   that doesn't exist).
+3. Confirm the framework preset auto-detects as **Next.js**.
+4. Set the production branch to `main` so feature-branch pushes produce
+   *preview* deploys, not production deploys.
+5. **Do not assign a custom domain yet.** The DNS decision lives in 10d.
+6. Report back to Opus: the project URL (e.g.
+   `vercel.com/<team>/code-rodmachen-com`) and confirmation that the
+   framework preset is Next.js.
+
+**Verify (10a):** Vercel project exists, is connected to the GitHub repo,
+production branch is `main`, no custom domain assigned.
+
+---
+
+### Step 10b — Bundle analyzer + local measurement (Gemini 3.1 Pro)
+
+**Owner:** Gemini 3.1 Pro. Can run in parallel with 10a. Does **not**
+touch git or Vercel.
+
+Mechanical work — see the "Gemini prompt" subsection below for the exact
+deliverables. Outputs:
+- Modified `package.json` and `next.config.mjs`
+- Verbatim `npm run build` output (especially the Route table)
+- Bundle analyzer report file sizes / top-chunk list
+- Pass/fail of Playwright e2e against a **production** build (`next start`,
+  not `next dev`)
+
+**Verify (10b):** Gemini's reply includes all five deliverables listed in
+the prompt, with raw build output pasted (not summarized).
+
+---
+
+### Step 10c — Review, commit, push (Opus)
+
+**Owner:** Opus. **Strict prerequisite: 10a AND 10b are both done.**
+
+Why both: pushing the commit triggers a Vercel deploy, and that deploy
+needs a Vercel project to land in (10a). Pushing without 10a would just
+sit on GitHub with no preview URL.
+
+1. Re-run all of Gemini's verification commands locally (per the project's
+   redundancy policy in the "Roles and workflow" section): clean
+   `npm run build`, `ANALYZE=true npm run build`, e2e against
+   `next start`.
+2. Stage Gemini's `package.json` and `next.config.mjs` changes.
+3. Commit with the Step 10 message.
+4. Push the branch. The Vercel GitHub integration auto-creates a preview
+   deploy against the new project from 10a.
+5. Wait for the Vercel deploy to finish; capture the preview URL.
+
+**Verify (10c):** local runs all green, commit pushed, Vercel preview URL
+returned (typically `code-rodmachen-com-<hash>-<team>.vercel.app`).
+
+---
+
+### Step 10d — Preview verification + interpretation + DNS decision (Opus + User)
+
+**Owner:** Opus interprets the numbers and verifies the preview; User
+decides whether to assign the custom domain.
+
+1. **Opus visits the preview URL** and verifies:
+   - Home page loads, Classicy desktop renders
+   - Both placeholder posts visible in the sidebar
+   - Clicking a post updates the URL and reading pane (no full reload)
+   - Direct navigation to `/posts/typography-test` lands selected
+   - Browser back restores the prior selection
+   - Console is free of errors (audio-sprite warnings excepted) and
+     hydration warnings
+2. **Opus interprets bundle numbers** against pre-plan §5.2 (rough
+   expectation: 500KB+ gzipped JS). If first-load JS for any route exceeds
+   **~1MB gzipped**, flag it in the PR description and recommend a
+   lazy-loading pass before Phase 2. Otherwise just record the numbers.
+3. **Opus updates the PR description** with: preview URL, exact First Load
+   JS numbers, bundle analyzer top-10 chunk list, any deployed-preview
+   warnings, and the verdict on whether numbers are within expectation.
+4. **DNS decision (User-only call).** The original plan defers DNS to
+   Phase 2. The case for *waiting*: only 2 placeholder posts are live;
+   cutting over makes `code.rodmachen.com` show "Hello Classicy" + a
+   typography test until content is migrated. The case for *cutting over
+   now*: if the existing S3 site is fully abandoned and not serving
+   anything users still rely on, cutover gives end-to-end verification on
+   the real domain at zero cost. **The user decides.** If the user opts
+   to cut over: assign `code.rodmachen.com` as a production domain on the
+   Vercel project, update DNS at the registrar (Vercel will surface the
+   exact records), and record the cutover in the PR description as a
+   scope deviation from the original plan.
+
+**Verify (10d):** preview URL renders cleanly, PR description updated,
+DNS decision recorded one way or the other.
 
 ### Gemini prompt (mechanical half only — Opus interprets the numbers)
 
-> You are executing the **mechanical half of Step 7** of the Phase 1 plan
-> for `code.rodmachen.com`. Read `docs/plans/phase-1.md` for full context.
-> Your scope is **bundle analysis and measurement only** — the Vercel
-> project setup and the decision about whether the bundle numbers are
-> acceptable are not your call.
+> You are executing the **mechanical half of Step 10** (sub-step 10b)
+> of the Phase 1 plan for `code.rodmachen.com`. Read `docs/plans/phase-1.md`
+> for full context. Your scope is **bundle analysis and measurement only**
+> — the Vercel project setup (10a) and the decision about whether the
+> bundle numbers are acceptable (10d) are not your call.
 >
-> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–6 have
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–9 have
 > landed. The full Phase 1 UI is working locally.
 >
 > **Deliverables:**
@@ -831,8 +1240,10 @@ Files created/modified:
 > that's Opus's job. Just paste the numbers.
 >
 > **Vercel deploy setup is NOT your job.** The user creates the new Vercel
-> project (`code-rodmachen-com-classicy`) manually from the GitHub repo.
-> Do not run any `vercel` CLI commands or touch Vercel configuration.
+> project (`code-rodmachen-com`) manually from the GitHub repo in
+> sub-step 10a. Do not run any `vercel` CLI commands or touch Vercel
+> configuration. Your scope is sub-step 10b only — the bundle analyzer
+> wiring and the local measurement runs.
 
 ---
 
@@ -841,18 +1252,34 @@ Files created/modified:
 Phase 1 is done when **all** of the following are true:
 
 1. CI is green on the PR (lint, type check, build, Playwright e2e)
-2. The Vercel preview URL renders the Classicy desktop with the blog
-   window open and both placeholder posts visible in the sidebar
-3. Clicking a post in the sidebar updates the URL to `/posts/[slug]` and
-   swaps the reading pane content without a full page reload
-4. Direct navigation to `/posts/[slug]` lands with the right post selected
-5. Browser console is free of errors and React hydration warnings on every
-   route, in both `next dev` and `next start`
-6. Bundle size measurement is recorded in the PR description (no budget
+2. The Vercel preview URL renders the Classicy desktop with: a single
+   menu bar, the Reader window centered (max-width 1000px) showing the
+   most recent post, the speaker icon (muted) to the left of the clock,
+   and a desktop with `Hard Drive`, `About`, and `Contact` icons
+3. The four custom menus (Apple / File / Edit / View / Help) all render
+   their documented items with no keyboard shortcuts; Edit → Edit Posts
+   is disabled; View toggles between Normal and Full Width and resets on
+   navigation; Apple → About This Site opens the tech-stack window
+4. File → Open opens the Posts listings window with Name / Date Added /
+   Tags columns; clicking a row navigates to `/posts/[slug]` and the
+   Reader updates without a full page reload
+5. Direct navigation to `/posts/[slug]` lands with the right post
+   selected in the Reader (deep-link preserved)
+6. Double-clicking the desktop About icon opens the full About sub-window;
+   double-clicking Contact opens the Contact sub-window; both stack above
+   the Reader
+7. Post body text renders in Geneva (or the verified Classicy-shipped
+   Geneva equivalent), headings remain in unsmoothed ChicagoFLF
+8. Browser console is free of errors and React hydration warnings on
+   every route, in both `next dev` and `next start` (audio-sprite warnings
+   excepted, as they have been since Step 3)
+9. Bundle size measurement is recorded in the PR description (no budget
    enforcement yet — that's a Phase 2 decision)
-7. The production `code.rodmachen.com` domain is **untouched**
+10. The production `code.rodmachen.com` DNS decision is recorded in the
+    PR description (either "untouched per plan" or "cut over with the
+    user's explicit approval in §10d")
 
-When all seven hold, the PR is ready for human review. After merge,
+When all ten hold, the PR is ready for human review. After merge,
 Phase 2 picks up: theme/sound decisions, content migration from the old
 repo, RSS, topics pages, analytics, Cloudinary, a11y audit, bundle budget,
 DNS cutover.
@@ -869,14 +1296,22 @@ DNS cutover.
 | 4 — Velite + posts | Gemini 3.1 Pro | Opus |
 | 5 — Blog window | **Opus** | Opus |
 | 6 — Typography | Gemini 3.1 Pro | Opus |
-| 7 — Deploy + measure | Gemini (mechanical) + Opus (interpret) | Opus |
+| 7 — Chrome and menu bars | **Opus** | Opus |
+| 8 — Multi-window architecture | **Opus** | Opus |
+| 9 — About/Contact + Geneva font | Gemini 3.1 Pro | Opus |
+| 10 — Deploy + measure | Gemini (mechanical) + Opus (interpret) + User (Vercel + DNS) | Opus |
 
-**Model switches happen between Steps 2→3, 3→4, 4→5, 5→6, and 6→7.** At
-each switch the user stops and changes the active model in Claude Code,
-then runs the corresponding Gemini prompt (from the step's "Gemini prompt"
-subsection) in a separate Gemini session, then pastes Gemini's reply back
-into a Claude Code session for Opus to review and commit. Steps 3 and 5
-run entirely in Claude Code with Opus.
+**Model switches happen between Steps 2→3, 3→4, 4→5, 5→6, 6→7, 8→9,
+and 9→10b.** At each switch the user stops and changes the active model
+in Claude Code, then runs the corresponding Gemini prompt (from the
+step's "Gemini prompt" subsection) in a separate Gemini session, then
+pastes Gemini's reply back into a Claude Code session for Opus to review
+and commit. Steps 3, 5, 7, and 8 run entirely in Claude Code with Opus
+(7→8 is Opus→Opus, no switch). Step 9 → Step 10b is technically a
+Gemini→Gemini transition, but there is an Opus review/commit between
+them, so the user will switch to Opus for the Step 9 review, then back
+to Gemini for Step 10b — same handoff cadence as every other Gemini
+step.
 
 ---
 
@@ -897,18 +1332,30 @@ vitest.config.ts
 app/layout.tsx
 app/page.tsx
 app/components/ClassicyShell.tsx
-app/components/BlogWindow.tsx
+app/components/ClassicyDesktopInner.tsx
+app/components/PostReaderWindow.tsx          # replaces BlogWindow.tsx in Step 8
+app/components/PostListingsWindow.tsx        # Step 8
+app/components/AboutThisSiteWindow.tsx       # Step 7 (Apple menu)
+app/components/AboutWindow.tsx               # Step 9 (desktop icon)
+app/components/ContactWindow.tsx             # Step 9 (desktop icon)
 app/components/PostBody.tsx
 app/components/post-body.module.css
+app/components/blog-window.css
 app/posts/[slug]/page.tsx
 content/posts/hello-classicy.md
 content/posts/typography-test.md
 tests/e2e/smoke.spec.ts
 tests/e2e/blog.spec.ts
 tests/e2e/typography.spec.ts
+tests/e2e/chrome.spec.ts                     # Step 7
+tests/e2e/posts-listings.spec.ts             # Step 8
+tests/e2e/desktop-windows.spec.ts            # Step 9
 tests/unit/content.test.ts
 README.md
 ```
+
+Files **deleted** during Phase 1:
+- `app/components/BlogWindow.tsx` (Step 8 — replaced by `PostReaderWindow.tsx`)
 
 Files modified (existing):
 - `.gitignore` (extend)
