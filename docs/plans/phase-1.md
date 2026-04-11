@@ -560,7 +560,7 @@ Files created/modified:
 
 ---
 
-## Step 6 — Typography and code-block styling inside the reading pane
+## Step 6 — Typography and code-block styling inside the reading pane ✅ complete
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** tests-alongside (one Playwright assertion per element)
