@@ -514,7 +514,7 @@ Files created/modified:
 
 ---
 
-## Step 5 — Model A blog window: sidebar + reading pane
+## Step 5 — Model A blog window: sidebar + reading pane ✅ complete
 
 **Executor:** Opus · **Reviewer:** Opus (self)
 **Test posture:** tests-alongside (Playwright e2e drives the assertions)

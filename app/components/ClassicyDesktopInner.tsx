@@ -1,34 +1,22 @@
 'use client';
 
 import {
-  ClassicyApp,
   ClassicyAppManagerProvider,
   ClassicyDesktop,
   ClassicyDesktopMenuBar,
-  ClassicyWindow,
 } from 'classicy';
+import BlogWindow from './BlogWindow';
 
-export default function ClassicyDesktopInner() {
+export default function ClassicyDesktopInner({
+  initialSlug,
+}: {
+  initialSlug: string;
+}) {
   return (
     <ClassicyAppManagerProvider appName="code.rodmachen.com">
       <ClassicyDesktop>
         <ClassicyDesktopMenuBar />
-        <ClassicyApp
-          id="blog"
-          name="Blog"
-          icon=""
-          noDesktopIcon
-          defaultWindow="blog.main"
-        >
-          <ClassicyWindow
-            id="blog.main"
-            appId="blog"
-            title="Blog"
-            initialSize={[600, 400]}
-            initialPosition={[120, 80]}
-            defaultWindow
-          />
-        </ClassicyApp>
+        <BlogWindow initialSlug={initialSlug} />
       </ClassicyDesktop>
     </ClassicyAppManagerProvider>
   );

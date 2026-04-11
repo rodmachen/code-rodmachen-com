@@ -26,12 +26,9 @@ test('smoke test - Classicy desktop mounts without errors', async ({
   await page.goto('/');
 
   await expect(page.locator('#classicyDesktop')).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: /finder/i }).first()).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /blog/i }).first()).toBeVisible();
 
-  const unexpectedMisses = failedRequests.filter(
-    (r) => !/wallpapers\/default\.png/.test(r),
-  );
-  expect(unexpectedMisses).toEqual([]);
+  expect(failedRequests).toEqual([]);
 
   const fatalErrors = errors.filter(
     (e) =>
