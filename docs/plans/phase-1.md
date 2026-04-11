@@ -582,13 +582,29 @@ monospace code blocks. This is not up for reinterpretation — Step 6 must
 use Chicago for headings.
 
 **Chicago font notes for the executor:**
-- Chicago is a **bitmap font.** At arbitrary sizes it blurs. Either ship
-  a TTF reflow (ChicagoFLF is public-domain, credited in Classicy's
-  README) or pin heading sizes to pixel values that hit the bitmap grid
-  cleanly. Do **not** use a fractional `rem` scale for headings.
+- **Retro look, no smoothing.** The point of Chicago is that it looks
+  like an authentic Mac OS 8 bitmap font. Headings must render blocky,
+  aliased, pixel-accurate — not the smoothed modern reinterpretation
+  most browsers default to. Apply **all** of:
+  - `-webkit-font-smoothing: none;`
+  - `-moz-osx-font-smoothing: auto;` (the `grayscale` value smooths —
+    don't use it; `auto` lets the bitmap stay blocky)
+  - `font-smooth: never;` (non-standard but still honored in some
+    engines)
+  - `text-rendering: optimizeSpeed;` (hints the engine to skip
+    anti-aliased glyph optimization)
+  Do not anti-alias, do not subpixel-render, do not add letter-spacing
+  tricks that disguise the bitmap grid. If the user wanted modern
+  typography they wouldn't have asked for Chicago.
+- Chicago is a **bitmap font.** At arbitrary sizes it blurs. Pin heading
+  sizes to **integer pixel values** that hit the bitmap grid cleanly:
+  h1=24px, h2=18px, h3=14px, h4=12px. Do **not** use a fractional `rem`
+  scale for headings. No fluid clamp(), no viewport units.
 - **Check `classicy/dist/classicy.css` first** — Classicy may already
   load a Chicago webfont as part of its Platinum theme. If it does,
-  reuse that `@font-face` instead of shipping Chicago twice.
+  reuse that `@font-face` instead of shipping Chicago twice. If not,
+  ship ChicagoFLF (public-domain TTF reflow, credited in Classicy's
+  README).
 - Chicago is for the *reading pane content only*. Classicy already
   styles its own chrome (menu bar, window title, buttons) — don't
   touch it.
@@ -637,18 +653,26 @@ Files created/modified:
 >    - **Body text:** readable serif stack (Charter, Georgia, serif) or
 >      system stack — pick based on what looks right inside the Classicy
 >      window. Line-height ~1.6, max-width ~65ch inside the reading pane.
->    - **Headings:** **Chicago font, mandatory** for h1–h6 (the user
->      ran this on the previous site and asked for it explicitly —
->      reference screenshot shared during Step 3 review, see the
->      "Typography reference" note above). Check
+>    - **Headings:** **Chicago font, mandatory** for h1–h6, and
+>      **rendered retro — blocky, aliased, pixel-accurate — not
+>      smoothed.** The user ran this on the previous site and asked for
+>      it explicitly (reference screenshot shared during Step 3 review,
+>      see the "Typography reference" note above). The point of Chicago
+>      is the authentic Mac OS 8 bitmap look; if you smooth it, you've
+>      defeated the purpose. Required CSS on every heading rule (h1–h6):
+>      `-webkit-font-smoothing: none;`,
+>      `-moz-osx-font-smoothing: auto;` (NOT `grayscale`),
+>      `font-smooth: never;`,
+>      `text-rendering: optimizeSpeed;`. Check
 >      `classicy/dist/classicy.css` first for an existing Chicago
 >      `@font-face` — reuse it if present. If not, ship ChicagoFLF
 >      (public domain, credited in Classicy's README) as a self-hosted
 >      webfont under `public/fonts/` and declare it in
 >      `post-body.module.css`. Chicago is a bitmap font — pin heading
->      sizes to pixel values that hit the grid cleanly (e.g. 24px /
->      18px / 14px / 12px), do **not** use a fractional rem scale.
->      Stepped hierarchy: h1 largest, h2–h4 step down, h5–h6 optional.
+>      sizes to the **integer pixel** values 24px / 18px / 14px / 12px
+>      (h1 / h2 / h3 / h4). Do **not** use a fractional rem scale, no
+>      `clamp()`, no viewport units. Stepped hierarchy: h1 largest,
+>      h2–h4 step down, h5–h6 optional.
 >    - **Code blocks:** monospace, light background, padding, horizontal
 >      scroll on overflow. Must not visually fight the Mac OS 8 window
 >      chrome.
@@ -674,6 +698,13 @@ Files created/modified:
 >    - Asserts the `h1` uses Chicago — read
 >      `getComputedStyle(h1).fontFamily` and assert it contains
 >      `"Chicago"` (or `"ChicagoFLF"`, whichever you ship)
+>    - Asserts the `h1` is rendered **unsmoothed** — read
+>      `getComputedStyle(h1).webkitFontSmoothing` and assert it equals
+>      `"none"`. This catches the most common way Chicago gets
+>      accidentally modernized.
+>    - Asserts the `h1` font-size is an **integer pixel value** (no
+>      fractional rem) — parse `getComputedStyle(h1).fontSize` and
+>      assert `Number.isInteger(parseFloat(size))`.
 >    - Asserts at least one `<pre>` has inline color styles (evidence that
 >      Shiki ran) — `expect(style).toContain('color')` or similar
 >    - Asserts no horizontal overflow at default window size (compare
