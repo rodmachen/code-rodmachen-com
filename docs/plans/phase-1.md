@@ -341,7 +341,7 @@ was removed in Next.js 16).
 
 ---
 
-## Step 3 — Classicy spike: prove SSR/client boundary works
+## Step 3 — Classicy spike: prove SSR/client boundary works ✅ complete
 
 **Executor:** Opus · **Reviewer:** Opus (self)
 **Test posture:** tests-alongside (smoke test confirms render)

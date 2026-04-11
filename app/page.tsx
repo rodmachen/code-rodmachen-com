@@ -1,3 +1,5 @@
+import ClassicyShell from './components/ClassicyShell';
+
 export default function Home() {
-  return <h1>Hello, Classicy</h1>;
+  return <ClassicyShell />;
 }
