@@ -747,7 +747,7 @@ Files created/modified:
 
 ---
 
-## Step 7 — Chrome, menu bars, and window framing
+## Step 7 — Chrome, menu bars, and window framing ✅
 
 **Executor:** Opus · **Reviewer:** Opus
 **Test posture:** **tests deferred to Step 10.** Document the test spec
