@@ -858,7 +858,7 @@ behavior contract lives next to the code that defines it.
 
 ---
 
-## Step 8 — Multi-window architecture (Reader + Posts listings)
+## Step 8 — Multi-window architecture (Reader + Posts listings) ✅
 
 **Executor:** Opus · **Reviewer:** Opus
 **Test posture:** **tests deferred to Step 10.** Same rule as Step 7:
@@ -939,21 +939,37 @@ These are the assertions Step 10 will implement.
   File → Open opens the listings; click a row, verify URL changes and
   Reader updates; direct-nav to `/posts/typography-test` still works.
 
-### Handoff to Step 9
+### Handoff to Step 9 ✅ (filled in by Opus after Step 8)
 
-After Step 8 lands, **Opus must update Step 9's Gemini prompt below with
-two pieces of information** before handing off:
+1. **Classicy desktop-icon registration API:** Not used — windows use
+   `noDesktopIcon` on `<ClassicyApp>`. Each sub-window is registered by
+   rendering its `<ClassicyApp>` + `<ClassicyWindow>` as a child of
+   `<ClassicyDesktop>` inside `ClassicyDesktopInner.tsx`. Opening a
+   window programmatically is done via `useAppManagerDispatch()` +
+   `dispatch({ type: 'ClassicyAppOpen', app: { id, name, icon: '' } })`.
 
-1. **The exact Classicy desktop-icon registration API** (whatever shape
-   `ClassicyDesktopInner.tsx` ended up using to add the listings entry
-   point — Step 9 will use the same shape to add About + Contact icons).
-2. **The exact pattern for building a small Classicy window** (whatever
-   shape `PostListingsWindow.tsx` ended up using — Step 9 will copy it
-   for `AboutWindow.tsx` and `ContactWindow.tsx`).
+2. **Pattern for building a small Classicy window** (copy
+   `PostListingsWindow.tsx` or `AboutThisSiteWindow.tsx`):
+   ```tsx
+   export const MY_APP_ID = 'myApp';
+   export const MY_WINDOW_ID = 'myApp.main';
 
-This is the contract that makes Step 9 a real Gemini task instead of a
-research project. If Opus doesn't fill these in before Step 9 starts,
-Gemini will either guess (false-green risk) or stop and wait.
+   export default function MyWindow() {
+     return (
+       <ClassicyApp id={MY_APP_ID} name="My App" icon="" noDesktopIcon
+                    defaultWindow={MY_WINDOW_ID}>
+         <ClassicyWindow id={MY_WINDOW_ID} appId={MY_APP_ID}
+                         title="My App" initialSize={[360, 280]}
+                         initialPosition={[200, 120]} resizable={false}
+                         zoomable={false} collapsable={false} defaultWindow>
+           {/* content */}
+         </ClassicyWindow>
+       </ClassicyApp>
+     );
+   }
+   ```
+   Then add `<MyWindow />` as a child of `<ClassicyDesktop>` in
+   `ClassicyDesktopInner.tsx`.
 
 ### Commit message
 
