@@ -1159,70 +1159,172 @@ These are the assertions Step 10 will implement.
 
 ---
 
-## Step 10 — Test catch-up (all deferred UI tests)
+## Step 10 — UI bug fixes (post-audit)
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
-**Test posture:** **tests-only.** No production code changes (except
-incidental data-testid attribute additions if a spec needs a stable hook
-that doesn't exist in the components yet — Opus approves any such
-additions during review).
+**Test posture:** tests-alongside — each fix should be verifiable by the
+automated checks plus manual browser confirmation.
 
-This step exists because Steps 7, 8, 9 (and any additional UI steps
-inserted between 9 and 10) deferred their tests. Step 10 implements
-every test contract documented in those steps' "Test specs for Step 10"
-subsections.
+An Opus-driven browser audit after Steps 7–9 found eight issues. This
+step fixes all of them. Do each sub-item in order; verify the full suite
+after each sub-item before moving to the next.
 
-**Note for plan readers:** if more UI iteration steps land between 9
-and 10, they should each carry their own "Test specs for Step 10"
-subsection following the same pattern. Step 10 absorbs whatever has
-accumulated by the time it runs — it is the last UI-related step before
-deploy. The test posture for any new UI step is **always** "tests
-deferred to Step 10," not "tests-alongside."
+### Background for Gemini
 
-### Items to land
+The project uses the Classicy library (Mac OS 8 UI shell). Key files:
+- `app/components/PostReaderWindow.tsx` — post-body-only reader, the
+  main window (always visible). Uses `ClassicyApp` id `"blog"`,
+  `ClassicyWindow` id `"blog.reader"`.
+- `app/components/PostListingsWindow.tsx` — Finder-style post table.
+  Uses `ClassicyApp` id `"postListings"`.
+- `app/components/AboutWindow.tsx` — desktop-icon-launched sub-window.
+  Uses `ClassicyApp` id `"about"`.
+- `app/components/ContactWindow.tsx` — same pattern, id `"contact"`.
+- `app/components/AboutThisSiteWindow.tsx` — Apple-menu-launched, id
+  `"aboutThisSite"`.
+- `app/components/ClassicyDesktopInner.tsx` — registers all apps, injects
+  desktop icons for About and Contact, renames "Macintosh HD" → "Hard
+  Drive", adds "About This Site" to the Apple menu.
+- `app/components/blog-window.css` — window framing, reading pane layout,
+  post listings table styles.
+- `app/components/post-body.module.css` — typography inside the post body
+  (Geneva body text, ChicagoFLF headings, code blocks, etc.).
 
-For each UI step that ran between Step 6 and Step 10, locate its "Test
-specs for Step 10" subsection in `docs/plans/phase-1.md` and implement
-every assertion as Playwright tests. As of the current plan that means:
+The Classicy API for opening a window programmatically:
+```js
+dispatch({ type: 'ClassicyAppOpen', app: { id: APP_ID, name: '...', icon: '' } });
+```
+`dispatch` comes from `useAppManagerDispatch()`.
 
-1. **`tests/e2e/chrome.spec.ts` (new) — Step 7's spec.** All eleven
-   assertions in Step 7's "Test specs for Step 10" subsection. The File
-   → Open assertion implements Step 8's "opens listings window" form,
-   not the Step 7 stub form (because by Step 10, Step 8 has already
-   rewired File → Open).
+Desktop icons are injected via `useAppManager.setState()` into
+`System.Manager.Desktop.icons`. Each icon needs `appId`, `appName`,
+`icon`, `kind`, and `label`. Classicy auto-wires double-click on a
+desktop icon to open the matching `ClassicyApp` by `appId`.
 
-2. **`tests/e2e/posts-listings.spec.ts` (new) — Step 8's spec.** All
-   five assertions in Step 8's "Test specs for Step 10" subsection.
+### Items to fix
 
-3. **`tests/e2e/blog.spec.ts` (rewrite) — Step 8's spec.** Replace what
-   Step 8 stripped down to: just the Reader-shows-the-correct-post
-   assertions and the deep-link nav assertion. Sidebar code is gone, so
-   sidebar assertions stay gone.
+**10a. Post title h1 must be Chicago, not Times.**
 
-4. **`tests/e2e/desktop-windows.spec.ts` (new) — Step 9's spec.** All
-   five assertions.
+The `.blogPostTitle` (h1) is inside `.blogPostHeader`, which is inside
+`.blogReadingPane` — but it is **not** inside the `.postBody` CSS module
+(that module wraps only the Velite-rendered HTML via `PostBody.tsx`). So
+the Chicago heading styles in `post-body.module.css` do not reach the
+post title.
 
-5. **`tests/e2e/typography.spec.ts` (extend) — Step 9's spec.** Add the
-   body-font assertions on top of the existing heading assertions. Heading
-   assertions remain untouched. **Use the Step 6 false-green guards** —
-   `document.fonts.ready`, `document.fonts.check`, canvas width
-   comparison. The plan's Step 9 "Test specs for Step 10" subsection
-   gives you the exact pattern.
+Fix: add a rule in `blog-window.css` that applies the same Chicago
+treatment to `.blogPostTitle`:
+```css
+.blogPostTitle {
+  font-family: 'ChicagoFLF', serif;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: auto;
+  font-smooth: never;
+  text-rendering: optimizeSpeed;
+  font-weight: normal;
+  font-size: 24px;
+  line-height: 1.2;
+}
+```
 
-6. **Any other test specs** documented in UI steps inserted between 9
-   and 10. Read every step's spec subsection — do not miss any.
+**10b. Reading pane base font must be Geneva, not Times.**
 
-### Files modified / created
+`.blogReadingPane` in `blog-window.css` has no `font-family`. Everything
+outside the `.postBody` CSS module (subtitle, date, any chrome) inherits
+the browser default (Times).
 
-- New: `tests/e2e/chrome.spec.ts`
-- New: `tests/e2e/posts-listings.spec.ts`
-- New: `tests/e2e/desktop-windows.spec.ts`
-- Modified: `tests/e2e/blog.spec.ts` (full rewrite — pared-down post-Step-8)
-- Modified: `tests/e2e/typography.spec.ts` (body-font additions)
-- Possibly modified: a small number of `app/components/*.tsx` files to
-  add `data-testid` attributes if a spec needs a stable hook. Each such
-  addition must be a one-line attribute, not a behavior change. Opus
-  approves these in review.
+Fix: add to the existing `.blogReadingPane` rule:
+```css
+font-family: Geneva, "Lucida Grande", Verdana, sans-serif;
+```
+
+**10c. Post listings window is hidden behind the Reader.**
+
+File → Open dispatches `ClassicyAppOpen` correctly (audit confirmed the
+window is in the DOM and "VISIBLE" per `getBoundingClientRect`) — but the
+Reader's `!important` CSS makes it fill the viewport and sit on top. The
+listings window renders at `initialPosition={[250, 80]}` underneath.
+
+Fix: clicking the listings row is also broken because the Reader's
+`<article>` intercepts pointer events. Two things need to happen:
+1. After `ClassicyAppOpen` for the listings, also call
+   `dispatch({ type: 'ClassicyAppFocus', app: { id: POST_LISTINGS_APP_ID } })`
+   (or the equivalent Classicy action) to bring the listings to front.
+   **Investigate first:** check what Classicy actions exist for focusing /
+   raising a window. If `ClassicyAppFocus` doesn't exist, try
+   `ClassicyWindowFocus` or look at the Classicy source for the correct
+   action type.
+2. If Classicy's z-index management still can't overcome the Reader's
+   `!important` CSS, add a `z-index` rule for the listings window in
+   `blog-window.css` that places it above the reader when open. The
+   Classicy window element's id is `postListings_postListings\.main`.
+
+**10d. Desktop icons overlap — About icon unclickable.**
+
+Both About and Contact icons are injected into `Desktop.icons` in
+`ClassicyDesktopInner.tsx` without explicit positions, so Classicy stacks
+them at its default location. Contact's mask intercepts About's clicks.
+
+Fix: investigate whether Classicy's icon model supports `x`/`y` or
+`position` fields. If so, set distinct positions for each icon. If not,
+change the injection order (Contact first, then About) or explore
+Classicy's icon layout algorithm to find a workaround. The icons should
+be visually separated like "Hard Drive" already is.
+
+**10e. About window doesn't open from its desktop icon.**
+
+Even force-clicking the About icon (bypassing the overlap in 10d), the
+audit returned `NOT_IN_DOM` — the window never renders. Contact works
+fine with the same pattern.
+
+Investigate: the `about` appId may collide with something internal to
+Classicy. Try renaming to `aboutPage` or `siteAbout` in both
+`AboutWindow.tsx` and the icon injection in `ClassicyDesktopInner.tsx`.
+If that's not the issue, compare the About and Contact registrations
+line by line to find the difference.
+
+**10f. Post listings table font is Times.**
+
+The `.postListingsTable` in `blog-window.css` has `font-size: 12px` but
+no `font-family`. Confirmed by audit: `LISTINGS_TABLE_FONT: Times`.
+
+Fix: add to `.postListingsTable`:
+```css
+font-family: Geneva, "Lucida Grande", Verdana, sans-serif;
+```
+
+**10g. About/Contact window content font is not Geneva.**
+
+The inline `style={{ padding: '1rem' }}` divs in `AboutWindow.tsx` and
+`ContactWindow.tsx` inherit Classicy's default font, not Geneva.
+
+Fix: add `fontFamily: 'Geneva, "Lucida Grande", Verdana, sans-serif'`
+to the inline style, or better, create CSS classes in `blog-window.css`
+for these windows (similar to `.aboutThisSiteContent`) that set the
+Geneva font stack.
+
+**10h. About This Site window content font is not Geneva.**
+
+The `.aboutThisSiteContent` class in `blog-window.css` sets `font-size`
+and `line-height` but not `font-family`.
+
+Fix: add to `.aboutThisSiteContent`:
+```css
+font-family: Geneva, "Lucida Grande", Verdana, sans-serif;
+```
+
+### Files modified
+
+- `app/components/blog-window.css` (10a, 10b, 10c, 10f, 10g, 10h)
+- `app/components/PostReaderWindow.tsx` (10c — focus dispatch)
+- `app/components/PostListingsWindow.tsx` (10c — possible z-index or
+  CSS class addition)
+- `app/components/ClassicyDesktopInner.tsx` (10d, 10e — icon positions
+  and/or About app ID rename)
+- `app/components/AboutWindow.tsx` (10e — possible app ID rename; 10g —
+  font fix)
+- `app/components/ContactWindow.tsx` (10g — font fix)
+- `app/components/AboutThisSiteWindow.tsx` (10h — only if moving font
+  to inline style instead of CSS)
 
 ### Verify
 
@@ -1231,69 +1333,63 @@ every assertion as Playwright tests. As of the current plan that means:
 - `npm run lint` — clean
 - `npm test` — unit suite passes
 - `npm run build` — succeeds
-- `npm run test:e2e` — **every** spec passes, including all five test
-  files above
-- For each test that asserts on a font, the false-green guards from
-  Step 6 are present (`document.fonts.check` + canvas width comparison)
-  — Opus verifies this in review
+- `npm run test:e2e` — all existing tests still pass
+- **Manual browser checks (paste screenshots or describe results):**
+  1. Home page: post title "Hello, Classicy" renders in Chicago (blocky,
+     unsmoothed, 24px, normal weight)
+  2. Post subtitle and date render in Geneva (sans-serif)
+  3. File → Open opens the Posts listings window **visibly on top of** the
+     Reader
+  4. Clicking a row in the listings navigates the Reader to that post
+  5. Double-clicking the About desktop icon opens the About sub-window
+  6. Double-clicking the Contact desktop icon opens the Contact sub-window
+  7. About, Contact, and About This Site windows all render text in Geneva
+  8. Desktop icons (About, Contact, Hard Drive) are visually separated,
+     none overlap
 
 ### Commit message
 
-`Step 10: Test catch-up for deferred UI tests`
+`Step 10: UI bug fixes from post-audit (fonts, z-order, icons)`
 
 ### Gemini prompt
 
-> You are executing **Step 10** of the Phase 1 plan for `code.rodmachen.com`.
-> Read `docs/plans/phase-1.md` for full context — your scope is the
-> "Step 10 — Test catch-up" section only.
+> You are executing **Step 10** of the Phase 1 plan for
+> `code.rodmachen.com`. Read `docs/plans/phase-1.md` — your scope is the
+> "Step 10 — UI bug fixes (post-audit)" section.
 >
-> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–9 (and
-> possibly additional UI iteration steps) have landed. The full Phase 1
-> UI is working in the browser but most of it has no automated test
-> coverage yet. Your job is to write that coverage.
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–9 have
+> landed. An Opus-driven browser audit found eight UI bugs. Your job is
+> to fix all of them.
 >
-> **CRITICAL — this is a tests-only step.** Do not change any production
-> code in `app/`, `content/`, `velite.config.ts`, `next.config.mjs`, or
-> any config file. The only production-code change you may propose is
-> adding a `data-testid` attribute to a component if you cannot find a
-> stable selector — and even then, flag it in your reply so Opus can
-> approve it during review rather than committing it silently.
+> **Required reading before you start:**
+> 1. The full "Step 10" section in `docs/plans/phase-1.md` — it describes
+>    every bug, the root cause, and a suggested fix.
+> 2. The files listed in "Background for Gemini" in that section.
+> 3. The Classicy library's exported types and state shape — use
+>    `node_modules/classicy/dist/` to understand available actions and
+>    icon model fields. Do not guess — investigate.
 >
-> **Required reading before you write any tests:**
-> 1. Every "Test specs for Step 10" subsection in `docs/plans/phase-1.md`
->    — there is one in Step 7, one in Step 8, and one in Step 9 (and
->    possibly more in any UI iteration steps between 9 and 10). These
->    are your contract.
-> 2. `tests/e2e/typography.spec.ts` — for the existing Step 6 false-green
->    guards (`document.fonts.check` + canvas width comparison). Use the
->    same shape for any new font assertions.
-> 3. `tests/e2e/blog.spec.ts` and `tests/e2e/smoke.spec.ts` — for
->    Playwright patterns and the audio-sprite console-error filter that
->    every spec in this repo uses.
-> 4. The relevant components in `app/components/` — to find stable
->    selectors. Prefer existing `data-testid` attributes; only ask for
->    new ones if nothing exists.
+> **Work through items 10a–10h in order.** For each:
+> 1. Read the relevant source files.
+> 2. Apply the fix (or investigate and apply a better fix if the
+>    suggested one doesn't work).
+> 3. Run the verification suite: `npm run content:build`, `npx tsc
+>    --noEmit`, `npm run lint`, `npm test`, `npm run build`, `npm run
+>    test:e2e`.
+> 4. If any check fails, fix it before moving to the next item.
 >
-> **Build the five test files** listed in "Items to land". Implement
-> every assertion in every spec subsection. Do not skip assertions. Do
-> not invent new assertions that aren't in the spec.
->
-> **Verification (run all of these and paste output):**
-> 1. `npm run content:build`
-> 2. `npx tsc --noEmit`
-> 3. `npm run lint`
-> 4. `npm test`
-> 5. `npm run build`
-> 6. `npm run test:e2e` — paste the full output, every spec must pass
+> **Investigation tasks (10c, 10d, 10e):** These require looking at
+> Classicy's source/types to find the right approach. Grep
+> `node_modules/classicy/dist/` for action types, icon position fields,
+> etc. Report what you find and the approach you took.
 >
 > **Do not commit or push.** Reply with:
-> (1) test files created/modified,
-> (2) any `data-testid` attributes you needed to add (Opus approves
->     each one before commit),
+> (1) files modified and what changed in each,
+> (2) investigation findings for 10c/10d/10e,
 > (3) full output of all six verification commands,
-> (4) any test spec from the plan that you couldn't implement and why,
-> (5) any flaky tests you observed (run `npm run test:e2e` twice to
->     check).
+> (4) manual browser check results (describe what you see for each of
+>     the eight checks in the Verify section),
+> (5) anything you couldn't fix and why.
 
 ---
 
