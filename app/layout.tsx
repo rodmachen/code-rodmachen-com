@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import 'classicy/dist/classicy.css';
+import './globals.css';
 import './components/blog-window.css';
 
 export const metadata: Metadata = {

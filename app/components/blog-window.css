@@ -1,3 +1,39 @@
+/* Menu bar: flex layout so the speaker widget renders to the left of the
+   clock in DOM order, and the app switcher/widgets hug the right edge. */
+.classicyDesktopMenu {
+  display: flex !important;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+.classicyDesktopMenu > li {
+  float: none !important;
+}
+
+.classicyDesktopMenuAppSwitcher {
+  margin-left: auto !important;
+}
+
+/* Window framing: center the blog window under the menu bar, full viewport
+   height. The `data-blog-zoom` attribute on <html> flips between the 1000px
+   cap (Normal) and full width (Full Width). Classicy applies inline
+   position/size styles on this node, so we override with !important. */
+#blog_blog\.main {
+  box-sizing: border-box !important;
+  left: 50% !important;
+  top: 20px !important;
+  transform: translateX(-50%) !important;
+  width: min(100vw, 1000px) !important;
+  height: calc(100vh - 20px) !important;
+  max-height: calc(100vh - 20px) !important;
+}
+
+html[data-blog-zoom='full'] #blog_blog\.main {
+  left: 0 !important;
+  transform: none !important;
+  width: 100vw !important;
+}
+
 .blogWindowLayout {
   display: flex;
   flex-direction: row;
@@ -105,4 +141,19 @@
 .blogPostBody td {
   border: 1px solid #808080;
   padding: 4px 8px;
+}
+
+.aboutThisSiteContent {
+  padding: 12px 16px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.aboutThisSiteContent h2 {
+  margin: 0 0 8px 0;
+}
+
+.aboutThisSiteContent ul {
+  margin: 4px 0 8px 18px;
+  padding: 0;
 }

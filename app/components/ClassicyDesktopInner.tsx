@@ -3,9 +3,113 @@
 import {
   ClassicyAppManagerProvider,
   ClassicyDesktop,
-  ClassicyDesktopMenuBar,
+  // @ts-ignore - runtime export not in classicy's d.ts
+  useAppManager,
+  // @ts-ignore - runtime export not in classicy's d.ts
+  useAppManagerDispatch,
+  // @ts-ignore - runtime export not in classicy's d.ts
+  useSoundDispatch,
 } from 'classicy';
+import { useEffect } from 'react';
+import AboutThisSiteWindow, {
+  ABOUT_THIS_SITE_APP_ID,
+} from './AboutThisSiteWindow';
 import BlogWindow from './BlogWindow';
+
+function DesktopInit() {
+  const dispatch = useAppManagerDispatch();
+  const soundDispatch = useSoundDispatch();
+
+  useEffect(() => {
+    soundDispatch({
+      type: 'ClassicySoundDisable',
+      disabled: ['*'],
+    });
+  }, [soundDispatch]);
+
+  useEffect(() => {
+    const openAbout = () => {
+      dispatch({
+        type: 'ClassicyAppOpen',
+        app: {
+          id: ABOUT_THIS_SITE_APP_ID,
+          name: 'About This Site',
+          icon: '',
+        },
+      });
+    };
+
+    const state = useAppManager.getState();
+    useAppManager.setState({
+      System: {
+        ...state.System,
+        Manager: {
+          ...state.System.Manager,
+          DateAndTime: {
+            ...state.System.Manager.DateAndTime,
+            displaySeconds: false,
+            displayDay: false,
+            displayLongDay: false,
+            displayPeriod: true,
+            militaryTime: false,
+            flashSeparators: false,
+          },
+          Desktop: {
+            ...state.System.Manager.Desktop,
+            systemMenu: [
+              {
+                id: 'about-this-site',
+                title: 'About This Site',
+                onClickFunc: openAbout,
+              },
+            ],
+          },
+        },
+      },
+    });
+  }, [dispatch]);
+
+  useEffect(() => {
+    type DesktopIcon = {
+      appId: string;
+      appName: string;
+      icon: string;
+      kind: string;
+      label?: string;
+    };
+    const isMacHD = (icon: DesktopIcon) =>
+      icon.appName === 'Macintosh HD' || icon.label === 'Macintosh HD';
+
+    const renameIcon = () => {
+      const current = useAppManager.getState();
+      const icons = current.System.Manager.Desktop.icons as DesktopIcon[];
+      if (!icons.some(isMacHD)) return false;
+      useAppManager.setState({
+        System: {
+          ...current.System,
+          Manager: {
+            ...current.System.Manager,
+            Desktop: {
+              ...current.System.Manager.Desktop,
+              icons: icons.map((icon) =>
+                isMacHD(icon) ? { ...icon, label: 'Hard Drive' } : icon,
+              ),
+            },
+          },
+        },
+      });
+      return true;
+    };
+
+    if (renameIcon()) return;
+    const unsubscribe = useAppManager.subscribe(() => {
+      if (renameIcon()) unsubscribe();
+    });
+    return unsubscribe;
+  }, []);
+
+  return null;
+}
 
 export default function ClassicyDesktopInner({
   initialSlug,
@@ -15,8 +119,9 @@ export default function ClassicyDesktopInner({
   return (
     <ClassicyAppManagerProvider appName="code.rodmachen.com">
       <ClassicyDesktop>
-        <ClassicyDesktopMenuBar />
+        <DesktopInit />
         <BlogWindow initialSlug={initialSlug} />
+        <AboutThisSiteWindow />
       </ClassicyDesktop>
     </ClassicyAppManagerProvider>
   );
