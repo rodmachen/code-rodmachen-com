@@ -2,8 +2,8 @@
 
 import { ClassicyApp, ClassicyWindow } from 'classicy';
 
-export const ABOUT_APP_ID = 'about';
-export const ABOUT_WINDOW_ID = 'about.main';
+export const ABOUT_APP_ID = 'siteAbout';
+export const ABOUT_WINDOW_ID = 'siteAbout.main';
 
 export default function AboutWindow() {
   return (
@@ -25,7 +25,7 @@ export default function AboutWindow() {
         collapsable={false}
         defaultWindow
       >
-        <div data-testid="about-window" style={{ padding: '1rem' }}>
+        <div data-testid="about-window" style={{ padding: '1rem', fontFamily: 'Geneva, "Lucida Grande", Verdana, sans-serif' }}>
           Code is a coding-focused blog by Rod Machen, built on Next.js + Classicy + Velite. The retro Mac OS 8 look is deliberate.
         </div>
       </ClassicyWindow>

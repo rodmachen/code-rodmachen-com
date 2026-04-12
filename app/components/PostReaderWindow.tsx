@@ -88,6 +88,10 @@ function PostReaderWindowInner({
                   icon: '',
                 },
               });
+              dispatch({
+                type: 'ClassicyAppFocus',
+                app: { id: POST_LISTINGS_APP_ID }
+              });
             },
           },
         ],

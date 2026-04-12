@@ -1159,7 +1159,7 @@ These are the assertions Step 10 will implement.
 
 ---
 
-## Step 10 — UI bug fixes (post-audit)
+## Step 10 — UI bug fixes (post-audit) ✅
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** tests-alongside — each fix should be verifiable by the
