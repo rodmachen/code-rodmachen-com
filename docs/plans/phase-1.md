@@ -977,7 +977,7 @@ These are the assertions Step 10 will implement.
 
 ---
 
-## Step 9 — About/Contact sub-windows + Geneva body font
+## Step 9 — About/Contact sub-windows + Geneva body font ✅
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** **tests deferred to Step 10.** Same rule as Steps 7
