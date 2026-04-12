@@ -14,7 +14,8 @@ import { useEffect } from 'react';
 import AboutThisSiteWindow, {
   ABOUT_THIS_SITE_APP_ID,
 } from './AboutThisSiteWindow';
-import BlogWindow from './BlogWindow';
+import PostListingsWindow from './PostListingsWindow';
+import PostReaderWindow from './PostReaderWindow';
 
 function DesktopInit() {
   const dispatch = useAppManagerDispatch();
@@ -120,7 +121,8 @@ export default function ClassicyDesktopInner({
     <ClassicyAppManagerProvider appName="code.rodmachen.com">
       <ClassicyDesktop>
         <DesktopInit />
-        <BlogWindow initialSlug={initialSlug} />
+        <PostReaderWindow initialSlug={initialSlug} />
+        <PostListingsWindow />
         <AboutThisSiteWindow />
       </ClassicyDesktop>
     </ClassicyAppManagerProvider>

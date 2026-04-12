@@ -18,7 +18,7 @@
    height. The `data-blog-zoom` attribute on <html> flips between the 1000px
    cap (Normal) and full width (Full Width). Classicy applies inline
    position/size styles on this node, so we override with !important. */
-#blog_blog\.main {
+#blog_blog\.reader {
   box-sizing: border-box !important;
   left: 50% !important;
   top: 20px !important;
@@ -28,68 +28,10 @@
   max-height: calc(100vh - 20px) !important;
 }
 
-html[data-blog-zoom='full'] #blog_blog\.main {
+html[data-blog-zoom='full'] #blog_blog\.reader {
   left: 0 !important;
   transform: none !important;
   width: 100vw !important;
-}
-
-.blogWindowLayout {
-  display: flex;
-  flex-direction: row;
-  height: 100%;
-  min-height: 400px;
-  width: 100%;
-}
-
-.blogSidebar {
-  width: 200px;
-  min-width: 180px;
-  border-right: 1px solid #808080;
-  overflow-y: auto;
-  background: #dddddd;
-}
-
-.blogSidebar ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.blogSidebarItem {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 6px 10px;
-  border: none;
-  border-bottom: 1px solid #c0c0c0;
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-}
-
-.blogSidebarItem:hover {
-  background: #c8c8ff;
-}
-
-.blogSidebarItemActive {
-  background: #000080;
-  color: #ffffff;
-}
-
-.blogSidebarItemActive:hover {
-  background: #000080;
-}
-
-.blogSidebarTitle {
-  display: block;
-  font-weight: 600;
-}
-
-.blogSidebarDate {
-  display: block;
-  font-size: 11px;
-  opacity: 0.75;
 }
 
 .blogReadingPane {
@@ -156,4 +98,78 @@ html[data-blog-zoom='full'] #blog_blog\.main {
 .aboutThisSiteContent ul {
   margin: 4px 0 8px 18px;
   padding: 0;
+}
+
+/* Post listings window */
+.postListingsContainer {
+  height: 100%;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.postListingsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.postListingsTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.postListingsTable th {
+  text-align: left;
+  padding: 4px 8px;
+  background: #dddddd;
+  border-bottom: 1px solid #808080;
+  border-right: 1px solid #c0c0c0;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.postListingsTable th:last-child {
+  border-right: none;
+}
+
+.postListingsHeaderName {
+  width: 45%;
+}
+
+.postListingsHeaderDate {
+  width: 25%;
+}
+
+.postListingsHeaderTags {
+  width: 30%;
+}
+
+.postListingsRow {
+  cursor: pointer;
+}
+
+.postListingsRow:hover {
+  background: #c8c8ff;
+}
+
+.postListingsRow td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.postListingsCellName {
+  font-weight: 500;
+}
+
+.postListingsCellDate {
+  color: #555;
+}
+
+.postListingsCellTags {
+  color: #555;
+  font-size: 11px;
 }
