@@ -52,16 +52,18 @@ function DesktopInit() {
           {
             appId: ABOUT_APP_ID,
             appName: 'About',
-            icon: 'document',
+            icon: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
             kind: 'document',
             label: 'About',
+            location: [20, 20] as [number, number],
           },
           {
             appId: CONTACT_APP_ID,
             appName: 'Contact',
-            icon: 'document',
+            icon: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
             kind: 'document',
             label: 'Contact',
+            location: [20, 120] as [number, number],
           },
         ];
 

@@ -25,7 +25,7 @@ export default function ContactWindow() {
         collapsable={false}
         defaultWindow
       >
-        <div data-testid="contact-window" style={{ padding: '1rem' }}>
+        <div data-testid="contact-window" style={{ padding: '1rem', fontFamily: 'Geneva, "Lucida Grande", Verdana, sans-serif' }}>
           Reach me on GitHub: github.com/rodmachen
         </div>
       </ClassicyWindow>
