@@ -16,6 +16,8 @@ import AboutThisSiteWindow, {
 } from './AboutThisSiteWindow';
 import PostListingsWindow from './PostListingsWindow';
 import PostReaderWindow from './PostReaderWindow';
+import AboutWindow, { ABOUT_APP_ID } from './AboutWindow';
+import ContactWindow, { CONTACT_APP_ID } from './ContactWindow';
 
 function DesktopInit() {
   const dispatch = useAppManagerDispatch();
@@ -41,6 +43,28 @@ function DesktopInit() {
     };
 
     const state = useAppManager.getState();
+    const currentIcons = state.System.Manager.Desktop.icons || [];
+    const hasCustomIcons = currentIcons.some((i: any) => i.appId === ABOUT_APP_ID);
+    const newIcons = hasCustomIcons
+      ? currentIcons
+      : [
+          ...currentIcons,
+          {
+            appId: ABOUT_APP_ID,
+            appName: 'About',
+            icon: 'document',
+            kind: 'document',
+            label: 'About',
+          },
+          {
+            appId: CONTACT_APP_ID,
+            appName: 'Contact',
+            icon: 'document',
+            kind: 'document',
+            label: 'Contact',
+          },
+        ];
+
     useAppManager.setState({
       System: {
         ...state.System,
@@ -57,6 +81,7 @@ function DesktopInit() {
           },
           Desktop: {
             ...state.System.Manager.Desktop,
+            icons: newIcons,
             systemMenu: [
               {
                 id: 'about-this-site',
@@ -124,6 +149,8 @@ export default function ClassicyDesktopInner({
         <PostReaderWindow initialSlug={initialSlug} />
         <PostListingsWindow />
         <AboutThisSiteWindow />
+        <AboutWindow />
+        <ContactWindow />
       </ClassicyDesktop>
     </ClassicyAppManagerProvider>
   );
