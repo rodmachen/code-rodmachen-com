@@ -11,6 +11,7 @@ export default function AboutWindow() {
       id={ABOUT_APP_ID}
       name="About"
       icon={ClassicyIcons.system.files.fileText}
+      noDesktopIcon
       defaultWindow={ABOUT_WINDOW_ID}
     >
       <ClassicyWindow
