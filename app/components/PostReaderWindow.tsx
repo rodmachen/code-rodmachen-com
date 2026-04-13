@@ -148,8 +148,8 @@ function PostReaderWindowInner({
       initialSize={[1000, 720]}
       initialPosition={[0, 22]}
       resizable={false}
-      zoomable={false}
-      collapsable={false}
+      zoomable={true}
+      collapsable={true}
       defaultWindow
       appMenu={appMenu}
     >

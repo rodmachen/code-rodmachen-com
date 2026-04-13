@@ -1,5 +1,9 @@
 'use client';
 
+if (typeof window !== 'undefined') {
+  localStorage.removeItem('classicyDesktopState');
+}
+
 import {
   ClassicyAppManagerProvider,
   ClassicyDesktop,
@@ -21,6 +25,7 @@ import PostListingsWindow, {
 import PostReaderWindow from './PostReaderWindow';
 import AboutWindow, { ABOUT_APP_ID } from './AboutWindow';
 import ContactWindow, { CONTACT_APP_ID } from './ContactWindow';
+import TrashWindow from './TrashWindow';
 
 type ClassicyMenuItem = {
   id: string;
@@ -79,6 +84,7 @@ function DesktopInit() {
           {
             id: 'blog.view.normal',
             title: 'Normal',
+            disabled: true,
             onClickFunc: () => {
               document.documentElement.dataset.blogZoom = 'normal';
             },
@@ -86,6 +92,7 @@ function DesktopInit() {
           {
             id: 'blog.view.full',
             title: 'Full Width',
+            disabled: true,
             onClickFunc: () => {
               document.documentElement.dataset.blogZoom = 'full';
             },
@@ -133,7 +140,7 @@ function DesktopInit() {
     const state = useAppManager.getState();
     const currentIcons = state.System.Manager.Desktop.icons || [];
 
-    // 10.5a: Deduplicate icons by appId before adding custom ones
+    // 11.a: Deduplicate icons by appId before adding custom ones
     const seenIds = new Set<string>();
     const deduped = currentIcons.filter((i: any) => {
       if (seenIds.has(i.appId)) return false;
@@ -141,7 +148,7 @@ function DesktopInit() {
       return true;
     });
 
-    // 10.5c: Position icons on the right side, below where Hard Drive sits
+    // 11.c: Position icons on the right side, below where Hard Drive sits
     const rightX = typeof window !== 'undefined' ? window.innerWidth - 80 : 900;
 
     const hasAboutIcon = deduped.some((i: any) => i.appId === ABOUT_APP_ID);
@@ -152,33 +159,30 @@ function DesktopInit() {
           {
             appId: ABOUT_APP_ID,
             appName: 'About',
-            icon: ClassicyIcons.system.files.document, // 10.5b
+            icon: ClassicyIcons.system.files.fileText, // 11.5
             kind: 'document',
             label: 'About',
-            location: [rightX, 80] as [number, number],
+            location: [rightX, 64] as [number, number],
           },
           {
             appId: CONTACT_APP_ID,
             appName: 'Contact',
-            icon: ClassicyIcons.system.files.document, // 10.5b
+            icon: ClassicyIcons.system.files.fileText, // 11.5
             kind: 'document',
             label: 'Contact',
-            location: [rightX, 160] as [number, number],
+            location: [rightX, 128] as [number, number],
           },
-          // 10.5d: Trash icon in bottom-right corner
+          // 11.d: Trash icon in bottom-right corner
           {
             appId: 'trash',
             appName: 'Trash',
-            icon: ClassicyIcons.system.desktop.trashEmpty,
+            icon: ClassicyIcons.system.desktop.trashFull, // 11.5
             kind: 'icon',
             label: 'Trash',
             location: [
               rightX,
               typeof window !== 'undefined' ? window.innerHeight - 80 : 700,
             ] as [number, number],
-            onClickFunc: () => {
-              window.open('https://www.utexas.edu/', '_blank');
-            },
           },
         ];
 
@@ -213,108 +217,6 @@ function DesktopInit() {
     });
   }, [dispatch, blogMenu]);
 
-  // 10.5e: Keep menu bar persistent — whenever appMenu becomes empty,
-  // restore our blog menu. Classicy sets menuBar to [] on windows that
-  // don't define one, and that [] is truthy so it overwrites the blog menu.
-  useEffect(() => {
-    const unsubscribe = useAppManager.subscribe(() => {
-      const appMenu = useAppManager.getState().System.Manager.Desktop.appMenu;
-      if (appMenu && appMenu.length === 0) {
-        useAppManager.setState((prev: any) => ({
-          System: {
-            ...prev.System,
-            Manager: {
-              ...prev.System.Manager,
-              Desktop: {
-                ...prev.System.Manager.Desktop,
-                appMenu: blogMenu,
-              },
-            },
-          },
-        }));
-      }
-    });
-    return unsubscribe;
-  }, [blogMenu]);
-
-  // 10.5f: Replace default Hard Drive icon with one that opens Posts listings
-  useEffect(() => {
-    type DesktopIcon = {
-      appId: string;
-      appName: string;
-      icon: string;
-      kind: string;
-      label?: string;
-      onClickFunc?: () => void;
-    };
-    const isMacHD = (icon: DesktopIcon) =>
-      icon.appName === 'Macintosh HD' || icon.label === 'Macintosh HD';
-
-    const openPosts = () => {
-      dispatch({
-        type: 'ClassicyAppOpen',
-        app: {
-          id: POST_LISTINGS_APP_ID,
-          name: 'Posts',
-          icon: '',
-        },
-      });
-      dispatch({
-        type: 'ClassicyAppFocus',
-        app: { id: POST_LISTINGS_APP_ID },
-      });
-    };
-
-    const replaceHDIcon = () => {
-      const current = useAppManager.getState();
-      const icons = current.System.Manager.Desktop.icons as DesktopIcon[];
-      const hdIdx = icons.findIndex(isMacHD);
-      if (hdIdx === -1) return false;
-
-      const hdIcon = icons[hdIdx];
-      const hdLocation = (hdIcon as any).location ?? [
-        typeof window !== 'undefined' ? window.innerWidth - 80 : 900,
-        0,
-      ];
-
-      const hdReplacement = {
-        appId: 'desktop.hardDrive',
-        appName: 'Hard Drive',
-        label: 'Hard Drive',
-        icon: ClassicyIcons.system.drives.disk,
-        kind: 'icon',
-        location: hdLocation,
-        onClickFunc: openPosts,
-      };
-
-      // Remove the original HD, remove any stale desktop.hardDrive, then add replacement
-      const cleaned = icons.filter(
-        (icon) => !isMacHD(icon) && icon.appId !== 'desktop.hardDrive',
-      );
-      const replacedIcons = [...cleaned, hdReplacement];
-
-      useAppManager.setState({
-        System: {
-          ...current.System,
-          Manager: {
-            ...current.System.Manager,
-            Desktop: {
-              ...current.System.Manager.Desktop,
-              icons: replacedIcons,
-            },
-          },
-        },
-      });
-      return true;
-    };
-
-    if (replaceHDIcon()) return;
-    const unsubscribe = useAppManager.subscribe(() => {
-      if (replaceHDIcon()) unsubscribe();
-    });
-    return unsubscribe;
-  }, [dispatch]);
-
   return null;
 }
 
@@ -332,7 +234,9 @@ export default function ClassicyDesktopInner({
         <AboutThisSiteWindow />
         <AboutWindow />
         <ContactWindow />
+        <TrashWindow />
       </ClassicyDesktop>
     </ClassicyAppManagerProvider>
   );
 }
+

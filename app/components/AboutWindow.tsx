@@ -1,6 +1,6 @@
 'use client';
 
-import { ClassicyApp, ClassicyWindow } from 'classicy';
+import { ClassicyApp, ClassicyWindow, ClassicyIcons } from 'classicy';
 
 export const ABOUT_APP_ID = 'siteAbout';
 export const ABOUT_WINDOW_ID = 'siteAbout.main';
@@ -10,8 +10,7 @@ export default function AboutWindow() {
     <ClassicyApp
       id={ABOUT_APP_ID}
       name="About"
-      icon=""
-      noDesktopIcon
+      icon={ClassicyIcons.system.files.fileText}
       defaultWindow={ABOUT_WINDOW_ID}
     >
       <ClassicyWindow
@@ -21,8 +20,8 @@ export default function AboutWindow() {
         initialSize={[500, 400]}
         initialPosition={[200, 120]}
         resizable={false}
-        zoomable={false}
-        collapsable={false}
+        zoomable={true}
+        collapsable={true}
         defaultWindow
       >
         <div data-testid="about-window" style={{ padding: '1rem', fontFamily: 'Geneva, "Lucida Grande", Verdana, sans-serif' }}>
