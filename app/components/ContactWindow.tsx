@@ -1,6 +1,6 @@
 'use client';
 
-import { ClassicyApp, ClassicyWindow } from 'classicy';
+import { ClassicyApp, ClassicyWindow, ClassicyIcons } from 'classicy';
 
 export const CONTACT_APP_ID = 'contact';
 export const CONTACT_WINDOW_ID = 'contact.main';
@@ -10,8 +10,7 @@ export default function ContactWindow() {
     <ClassicyApp
       id={CONTACT_APP_ID}
       name="Contact"
-      icon=""
-      noDesktopIcon
+      icon={ClassicyIcons.system.files.fileText}
       defaultWindow={CONTACT_WINDOW_ID}
     >
       <ClassicyWindow
@@ -21,8 +20,8 @@ export default function ContactWindow() {
         initialSize={[400, 300]}
         initialPosition={[250, 150]}
         resizable={false}
-        zoomable={false}
-        collapsable={false}
+        zoomable={true}
+        collapsable={true}
         defaultWindow
       >
         <div data-testid="contact-window" style={{ padding: '1rem', fontFamily: 'Geneva, "Lucida Grande", Verdana, sans-serif' }}>

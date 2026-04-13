@@ -21,8 +21,8 @@ export default function AboutThisSiteWindow() {
         initialSize={[360, 280]}
         initialPosition={[200, 120]}
         resizable={false}
-        zoomable={false}
-        collapsable={false}
+        zoomable={true}
+        collapsable={true}
         defaultWindow
       >
         <div

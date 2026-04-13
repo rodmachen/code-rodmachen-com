@@ -246,4 +246,12 @@ html[data-blog-zoom='full'] #blog_blog\.reader {
   background-repeat: repeat !important;
   background-size: 2px 2px !important;
   image-rendering: pixelated;
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
 }
