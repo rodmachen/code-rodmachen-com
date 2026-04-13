@@ -50,7 +50,7 @@ These are **not** Phase 1 blockers but should be revisited before public launch.
    in App Router must wrap it in a client boundary themselves. → Step 3
    establishes that boundary.
 3. **Pre-1.0 framework (0.6.54).** → Pin the exact version, no caret.
-4. **Bundle weight unknown.** → Step 13 captures a measurement and records
+4. **Bundle weight unknown.** → Step 14 captures a measurement and records
    it in the PR description. Budget enforcement deferred to Phase 2.
 
 ---
@@ -73,7 +73,7 @@ Each role has a well-defined lane.
 - **Fills in Step 9's prompt with the exact API patterns produced by
   Steps 7 and 8** before handoff (without that, Step 9 isn't really a
   Gemini task)
-- Interprets the bundle numbers Gemini produces in Step 13
+- Interprets the bundle numbers Gemini produces in Step 14
 
 **Test posture for Steps 7–9 (and any inserted UI iteration steps):**
 **tests deferred to Step 10.** UI iteration is the wrong time to write
@@ -88,7 +88,7 @@ that Step 10 absorbs.
 
 **Gemini 3.1 Pro:**
 - Executes mechanical scaffolding and implementation work for Steps
-  1, 2, 4, 6, 9, 10, and the mechanical half of Step 13 (sub-step 13b)
+  1, 2, 4, 6, 9, 10, and the mechanical half of Step 14 (sub-step 14b)
 - Reads this plan file as its source of truth for each step
 - Produces files and pastes verification command output
 - **Does not touch git.** No staging, no commits, no pushes. Just writes
@@ -100,8 +100,8 @@ that Step 10 absorbs.
   steps (1, 2, 4, 6, 9, 10, 12-mechanical)
 - Runs the Gemini prompts in a separate Gemini session
 - Pastes Gemini's reply back into Claude Code so Opus can review and commit
-- Performs the one-time Vercel project setup in Step 13 (sub-step 13a)
-- Makes the DNS-cutover call in Step 13 (sub-step 13d)
+- Performs the one-time Vercel project setup in Step 14 (sub-step 14a)
+- Makes the DNS-cutover call in Step 14 (sub-step 14d)
 - Reviews and merges the PR
 
 **Verification policy:** Gemini runs the per-step verification commands
@@ -1711,33 +1711,326 @@ A third round of UI polish based on manual screenshot auditing and recent uncomm
 
 ---
 
-## Step 13 — Vercel preview deploy + bundle measurement
+# Step 13 — Post Browsing & Reading Redesign
+
+## Context
+
+The current architecture uses two separate ClassicyApps (PostListingsWindow and PostReaderWindow) connected by Next.js `router.push()`. Clicking a post in the listings triggers a full page re-render. This step consolidates into a single ClassicyApp following Classicy's own Finder pattern: a listings window plus dynamically opened reader windows per post.
+
+## Approach: Single App, Dynamic Reader Windows
+
+**Executor:** Gemini · **Reviewer:** Opus
+**Test posture:** tests-alongside
+
+### Gemini prompt
+
+> You are executing **Step 13** of the Phase 1 plan for
+> `code.rodmachen.com`. Read `docs/plans/phase-1.md` for full context.
+> Your scope is **refactoring the post browsing and reading system** into
+> a single ClassicyApp with dynamic reader windows.
+>
+> **Starting state:** branch `feature/classicy-phase-1`. Steps 1–12 have
+> landed. The site has two separate ClassicyApps for post browsing:
+> - `PostListingsWindow` (app id: `postListings`) — Finder-style table
+> - `PostReaderWindow` (app id: `blog`) — single post reader
+>
+> Clicking a post currently calls `router.push('/posts/${slug}')` which
+> triggers a full Next.js page re-render.
+>
+> **Goal:** Merge these into a single `ClassicyApp` (id: `blog`) that
+> contains:
+> 1. A **listings window** (always present, the default window)
+> 2. **Dynamic reader windows** — one per open post, created on click
+>
+> This follows the same pattern Classicy's own Finder uses internally:
+> it stores open paths in app data and maps over them to render
+> `ClassicyWindow` components dynamically.
+>
+> ---
+>
+> ## Deliverable 1: Create `app/components/BlogApp.tsx`
+>
+> This new file replaces both `PostReaderWindow.tsx` and
+> `PostListingsWindow.tsx`. It contains a single `ClassicyApp`.
+>
+> ### Structure
+>
+> ```tsx
+> // Single ClassicyApp with id "blog"
+> <ClassicyApp id="blog" name="Blog" icon="" noDesktopIcon defaultWindow="blog.listings">
+>   <ListingsWindow onOpenPost={handleOpenPost} />
+>   {openSlugs.map(slug => (
+>     <ReaderWindow key={slug} slug={slug} onClose={() => handleClosePost(slug)} />
+>   ))}
+> </ClassicyApp>
+> ```
+>
+> ### State management
+>
+> - `openSlugs: string[]` — React `useState` tracking which posts are open
+> - `handleOpenPost(slug)`:
+>   - If slug is already in `openSlugs`, focus its existing window via
+>     `dispatch({ type: 'ClassicyWindowFocus', app: { id: 'blog' }, window: { id: \`blog.reader.${slug}\` } })`
+>   - If not, add it: `setOpenSlugs(prev => [...prev, slug])`
+> - `handleClosePost(slug)`: Remove from `openSlugs`
+>
+> ### Listings window (`blog.listings`)
+>
+> - `ClassicyWindow` id: `blog.listings`, appId: `blog`
+> - Title: "Posts"
+> - Size: **1000px wide, full viewport height** — use
+>   `initialSize={[1000, typeof window !== 'undefined' ? window.innerHeight - 22 : 720]}`
+>   and `initialPosition={[0, 22]}` (centered, below menu bar)
+> - `defaultWindow={true}` — this is the window that opens on app launch
+> - **Columns:** Title, Subtitle, Date (sorted newest first by default)
+>   - Remove the current Name/Date Modified/Size/Kind columns
+>   - Title: post title (sortable)
+>   - Subtitle: post subtitle (not sortable, may be empty)
+>   - Date: formatted post date (sortable, default sort descending)
+> - **Row click handler:** Call `onOpenPost(post.slug)` — do NOT use
+>   `router.push()`. No Next.js navigation.
+> - Keep the sort indicator UI (▲/▼) from the current implementation
+> - Keep the status bar showing item count
+> - Reuse the existing CSS classes (`.postListingsContainer`,
+>   `.postListingsTable`, etc.) — update column headers and widths
+>
+> ### Reader windows (`blog.reader.${slug}`)
+>
+> - `ClassicyWindow` id: `blog.reader.${slug}`, appId: `blog`
+> - Title: post title
+> - Size: **1000px wide, full viewport height** — same as listings window:
+>   `initialSize={[1000, typeof window !== 'undefined' ? window.innerHeight - 22 : 720]}`
+> - Position: Use Classicy's default cascading (don't set `initialPosition`
+>   explicitly, or cascade slightly: `[20 + openIndex * 20, 22]`)
+> - `zoomable={true}`, `collapsable={true}`, `resizable={false}`
+> - `defaultWindow={false}`
+> - `onCloseFunc={() => onClose(slug)}` — removes slug from `openSlugs`
+> - `appMenu`: Include the File/Edit/View/Help menu (same structure as
+>   current `PostReaderWindowInner`'s appMenu). File > Open should focus
+>   the listings window. View > Normal/Full Width should toggle zoom on
+>   the reader.
+> - Content: Render the post article with header (title, subtitle, date)
+>   and `<PostBody html={post.body} />` — same as current reader
+>
+> ### URL handling
+>
+> - When a reader window opens or gains focus, call
+>   `window.history.replaceState(null, '', '/posts/${slug}')` to update
+>   the URL without triggering Next.js navigation
+> - When the listings window gains focus (and no reader windows are open,
+>   or the listings is explicitly focused), update URL to `/`
+> - On initial mount, read the `initialSlug` prop. If non-empty,
+>   pre-populate `openSlugs` with `[initialSlug]` so that post's reader
+>   window opens automatically on page load
+> - The component receives `initialSlug` as a prop from
+>   `ClassicyDesktopInner`
+>
+> ### CSS for reader windows (update `blog-window.css`)
+>
+> The current CSS targets `#blog_blog\.reader` (a single window ID).
+> This needs to work for dynamic window IDs like `#blog_blog\.reader\.hello-classicy`.
+>
+> **Replace the ID-based selector with an attribute selector:**
+> ```css
+> /* Before: */
+> #blog_blog\.reader { ... }
+> html[data-blog-zoom='full'] #blog_blog\.reader { ... }
+>
+> /* After: */
+> [id^="blog_blog.reader"] { ... }
+> html[data-blog-zoom='full'] [id^="blog_blog.reader"] { ... }
+> ```
+>
+> This matches any element whose id starts with `blog_blog.reader`,
+> covering both `blog_blog.reader.hello-classicy` and
+> `blog_blog.reader.typography-test`, etc.
+>
+> Also add the same centering/sizing rules for the listings window:
+> ```css
+> #blog_blog\.listings {
+>   box-sizing: border-box !important;
+>   left: 50% !important;
+>   top: 20px !important;
+>   transform: translateX(-50%) !important;
+>   width: min(100vw, 1000px) !important;
+>   height: calc(100vh - 20px) !important;
+>   max-height: calc(100vh - 20px) !important;
+> }
+> ```
+>
+> ---
+>
+> ## Deliverable 2: Update `ClassicyDesktopInner.tsx`
+>
+> - Remove `PostReaderWindow` and `PostListingsWindow` imports and
+>   their `<PostReaderWindow>` / `<PostListingsWindow>` JSX
+> - Import and render `<BlogApp initialSlug={initialSlug} />` instead
+> - In the `DesktopInit` component's `blogMenu`, update File > Open to
+>   focus the blog listings window:
+>   ```ts
+>   dispatch({ type: 'ClassicyWindowFocus', app: { id: 'blog' }, window: { id: 'blog.listings' } });
+>   ```
+>   (Instead of the current `ClassicyAppOpen` for `postListings`)
+> - Remove the `POST_LISTINGS_APP_ID` import since that app no longer
+>   exists
+>
+> ---
+>
+> ## Deliverable 3: Update listings column layout
+>
+> In `blog-window.css`, update the column width percentages for the new
+> three-column layout:
+> - Title: ~45%
+> - Subtitle: ~35%
+> - Date: ~20%
+>
+> Remove the Size and Kind column styles (`.postListingsHeaderSize`,
+> `.postListingsHeaderKind`, `.postListingsCellSize`,
+> `.postListingsCellKind`).
+>
+> ---
+>
+> ## Files to create/modify
+>
+> - **Create:** `app/components/BlogApp.tsx`
+> - **Modify:** `app/components/ClassicyDesktopInner.tsx`
+> - **Modify:** `app/components/blog-window.css`
+> - **Do NOT modify:** `app/page.tsx`, `app/posts/[slug]/page.tsx`,
+>   `ClassicyShell.tsx` — these still pass `initialSlug` through
+>   unchanged
+> - **Do NOT delete** `PostReaderWindow.tsx` or `PostListingsWindow.tsx`
+>   yet — Opus will clean those up after review
+>
+> ---
+>
+> ## Existing code reference
+>
+> **Post data** (imported from Velite):
+> ```ts
+> // @ts-ignore - generated by Velite
+> import { posts as rawPosts } from '../../.velite';
+>
+> type Post = {
+>   title: string;
+>   subTitle?: string;
+>   date: string;
+>   tags: string[];
+>   slug: string;
+>   body: string;
+>   permalink: string;
+> };
+>
+> const posts = (rawPosts as Post[])
+>   .slice()
+>   .sort((a, b) => b.date.localeCompare(a.date));
+> ```
+>
+> **PostBody component** (`app/components/PostBody.tsx`):
+> ```tsx
+> import styles from './post-body.module.css';
+> export default function PostBody({ html }: { html: string }) {
+>   return (
+>     <div
+>       className={`blogPostBody ${styles.postBody}`}
+>       data-testid="post-body"
+>       dangerouslySetInnerHTML={{ __html: html }}
+>     />
+>   );
+> }
+> ```
+>
+> **Classicy imports pattern:**
+> ```ts
+> import {
+>   ClassicyApp,
+>   ClassicyWindow,
+>   ClassicyIcons,
+>   // @ts-ignore - runtime export, not in classicy's d.ts
+>   useAppManagerDispatch,
+> } from 'classicy';
+> ```
+>
+> **Current reader window CSS** (in `blog-window.css`, lines 21-35):
+> ```css
+> #blog_blog\.reader {
+>   box-sizing: border-box !important;
+>   left: 50% !important;
+>   top: 20px !important;
+>   transform: translateX(-50%) !important;
+>   width: min(100vw, 1000px) !important;
+>   height: calc(100vh - 20px) !important;
+>   max-height: calc(100vh - 20px) !important;
+> }
+>
+> html[data-blog-zoom='full'] #blog_blog\.reader {
+>   left: 0 !important;
+>   transform: none !important;
+>   width: 100vw !important;
+> }
+> ```
+>
+> **ClassicyDesktopInner render tree** (lines 228-241):
+> ```tsx
+> <ClassicyAppManagerProvider appName="code.rodmachen.com">
+>   <ClassicyDesktop>
+>     <DesktopInit />
+>     <PostReaderWindow initialSlug={initialSlug} />
+>     <PostListingsWindow />
+>     <AboutThisSiteWindow />
+>     <AboutWindow />
+>     <ContactWindow />
+>     <TrashWindow />
+>   </ClassicyDesktop>
+> </ClassicyAppManagerProvider>
+> ```
+>
+> ---
+>
+> ## Verification
+>
+> After making changes, run:
+> 1. `npx tsc --noEmit` — must be clean
+> 2. `npm run lint` — must be clean (0 errors, warnings OK)
+> 3. `npm run build` — must succeed
+>
+> **Do not commit or push.** Reply with:
+> 1. Files created/modified (with brief description of each change)
+> 2. Whether all three verification commands passed
+> 3. Any warnings or issues encountered
+> 4. Any decisions you made where the spec was ambiguous
+>
+> **Do not run the dev server or e2e tests** — Opus will do manual
+> verification after review.
+
+---
+
+## Step 14 — Vercel preview deploy + bundle measurement
 
 **Executor:** Gemini 3.1 Pro (mechanical) + Opus (interpret) + User (Vercel setup) · **Reviewer:** Opus
 **Test posture:** tests-alongside
 
 Phase 1's exit criterion is a working preview URL. Per pre-plan §5.8, do
 **not** touch the production `code.rodmachen.com` DNS in this phase
-(decision pending — see §13d).
+(decision pending — see §14d).
 
-Step 13 has four sub-steps with explicit ordering. 13a (user) and 13b
-(Gemini) are independent and can run in parallel; 13c and 13d are
+Step 14 has four sub-steps with explicit ordering. 14a (user) and 14b
+(Gemini) are independent and can run in parallel; 14c and 14d are
 strictly sequential and must wait for both.
 
 Files created/modified across the whole step:
 - `package.json` — add `@next/bundle-analyzer` as a dev dep, add
-  `npm run analyze` script (13b)
-- `next.config.mjs` — wire the analyzer behind `ANALYZE=true` (13b)
+  `npm run analyze` script (14b)
+- `next.config.mjs` — wire the analyzer behind `ANALYZE=true` (14b)
 - PR description — record preview URL, bundle numbers, top-10 chunks,
-  any deployed-preview console warnings (13d)
+  any deployed-preview console warnings (14d)
 
-**Commit message:** `Step 13: Vercel preview deploy and bundle measurement`
+**Commit message:** `Step 14: Vercel preview deploy and bundle measurement`
 
 ---
 
-### Step 13a — Vercel project setup (User, one-time)
+### Step 14a — Vercel project setup (User, one-time)
 
-**Owner:** User. Cannot be done by Gemini or Opus. Can run in parallel with 13b.
+**Owner:** User. Cannot be done by Gemini or Opus. Can run in parallel with 14b.
 
 1. In the Vercel dashboard, create a new project from the
    `rodmachen/code-rodmachen-com` GitHub repo.
@@ -1747,19 +2040,19 @@ Files created/modified across the whole step:
 3. Confirm the framework preset auto-detects as **Next.js**.
 4. Set the production branch to `main` so feature-branch pushes produce
    *preview* deploys, not production deploys.
-5. **Do not assign a custom domain yet.** The DNS decision lives in 13d.
+5. **Do not assign a custom domain yet.** The DNS decision lives in 14d.
 6. Report back to Opus: the project URL (e.g.
    `vercel.com/<team>/code-rodmachen-com`) and confirmation that the
    framework preset is Next.js.
 
-**Verify (13a):** Vercel project exists, is connected to the GitHub repo,
+**Verify (14a):** Vercel project exists, is connected to the GitHub repo,
 production branch is `main`, no custom domain assigned.
 
 ---
 
-### Step 13b — Bundle analyzer + local measurement (Gemini 3.1 Pro)
+### Step 14b — Bundle analyzer + local measurement (Gemini 3.1 Pro)
 
-**Owner:** Gemini 3.1 Pro. Can run in parallel with 13a. Does **not**
+**Owner:** Gemini 3.1 Pro. Can run in parallel with 14a. Does **not**
 touch git or Vercel.
 
 Mechanical work — see the "Gemini prompt" subsection below for the exact
@@ -1770,17 +2063,17 @@ deliverables. Outputs:
 - Pass/fail of Playwright e2e against a **production** build (`next start`,
   not `next dev`)
 
-**Verify (13b):** Gemini's reply includes all five deliverables listed in
+**Verify (14b):** Gemini's reply includes all five deliverables listed in
 the prompt, with raw build output pasted (not summarized).
 
 ---
 
-### Step 13c — Review, commit, push (Opus)
+### Step 14c — Review, commit, push (Opus)
 
-**Owner:** Opus. **Strict prerequisite: 13a AND 13b are both done.**
+**Owner:** Opus. **Strict prerequisite: 14a AND 14b are both done.**
 
 Why both: pushing the commit triggers a Vercel deploy, and that deploy
-needs a Vercel project to land in (13a). Pushing without 13a would just
+needs a Vercel project to land in (14a). Pushing without 14a would just
 sit on GitHub with no preview URL.
 
 1. Re-run all of Gemini's verification commands locally (per the project's
@@ -1788,17 +2081,17 @@ sit on GitHub with no preview URL.
    `npm run build`, `ANALYZE=true npm run build`, e2e against
    `next start`.
 2. Stage Gemini's `package.json` and `next.config.mjs` changes.
-3. Commit with the Step 13 message.
+3. Commit with the Step 14 message.
 4. Push the branch. The Vercel GitHub integration auto-creates a preview
-   deploy against the new project from 13a.
+   deploy against the new project from 14a.
 5. Wait for the Vercel deploy to finish; capture the preview URL.
 
-**Verify (13c):** local runs all green, commit pushed, Vercel preview URL
+**Verify (14c):** local runs all green, commit pushed, Vercel preview URL
 returned (typically `code-rodmachen-com-<hash>-<team>.vercel.app`).
 
 ---
 
-### Step 13d — Preview verification + interpretation + DNS decision (Opus + User)
+### Step 14d — Preview verification + interpretation + DNS decision (Opus + User)
 
 **Owner:** Opus interprets the numbers and verifies the preview; User
 decides whether to assign the custom domain.
@@ -1830,16 +2123,16 @@ decides whether to assign the custom domain.
    exact records), and record the cutover in the PR description as a
    scope deviation from the original plan.
 
-**Verify (13d):** preview URL renders cleanly, PR description updated,
+**Verify (14d):** preview URL renders cleanly, PR description updated,
 DNS decision recorded one way or the other.
 
 ### Gemini prompt (mechanical half only — Opus interprets the numbers)
 
-> You are executing the **mechanical half of Step 13** (sub-step 13b)
+> You are executing the **mechanical half of Step 14** (sub-step 14b)
 > of the Phase 1 plan for `code.rodmachen.com`. Read `docs/plans/phase-1.md`
 > for full context. Your scope is **bundle analysis and measurement only**
-> — the Vercel project setup (13a) and the decision about whether the
-> bundle numbers are acceptable (13d) are not your call.
+> — the Vercel project setup (14a) and the decision about whether the
+> bundle numbers are acceptable (14d) are not your call.
 >
 > **Starting state:** branch `feature/classicy-phase-1`. Steps 1–10 have
 > landed. The full Phase 1 UI is working locally and is fully tested.
@@ -1896,10 +2189,10 @@ DNS decision recorded one way or the other.
 >
 > **Vercel deploy setup is NOT your job.** The user creates the new Vercel
 > project (`code-rodmachen-com`) manually from the GitHub repo in
-> sub-step 13a. Do not run any `vercel` CLI commands or touch Vercel
+> sub-step 14a. Do not run any `vercel` CLI commands or touch Vercel
 > configuration. Your scope is sub-step 13b only — the bundle analyzer
 > wiring and the local measurement runs.
-
+14
 ---
 
 ## End-to-end verification (Phase 1 exit criteria)
@@ -1932,7 +2225,7 @@ Phase 1 is done when **all** of the following are true:
    enforcement yet — that's a Phase 2 decision)
 10. The production `code.rodmachen.com` DNS decision is recorded in the
     PR description (either "untouched per plan" or "cut over with the
-    user's explicit approval in §13d")
+    user's explicit approval in §14d")
 
 When all ten hold, the PR is ready for human review. After merge,
 Phase 2 picks up: theme/sound decisions, content migration from the old
@@ -1960,7 +2253,7 @@ DNS cutover.
 
 **Model switches happen between Steps 2→3, 3→4, 4→5, 5→6, 6→7, 8→9,
 and (after any inserted UI iteration steps) when entering Step 10 and
-again entering Step 13b.** At each switch the user stops and changes
+again entering Step 14b.** At each switch the user stops and changes
 the active model in Claude Code, then runs the corresponding Gemini
 prompt (from the step's "Gemini prompt" subsection) in a separate
 Gemini session, then pastes Gemini's reply back into a Claude Code

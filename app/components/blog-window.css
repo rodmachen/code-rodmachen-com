@@ -18,7 +18,8 @@
    height. The `data-blog-zoom` attribute on <html> flips between the 1000px
    cap (Normal) and full width (Full Width). Classicy applies inline
    position/size styles on this node, so we override with !important. */
-#blog_blog\.reader {
+/* Listings window: centered, full height below menu bar */
+#blog_blog\.listings {
   box-sizing: border-box !important;
   left: 50% !important;
   top: 20px !important;
@@ -28,7 +29,16 @@
   max-height: calc(100vh - 20px) !important;
 }
 
-html[data-blog-zoom='full'] #blog_blog\.reader {
+/* Reader windows: attribute selector matches dynamic IDs like
+   blog_blog.reader.hello-classicy, blog_blog.reader.typography-test, etc. */
+[id^="blog_blog.reader"] {
+  box-sizing: border-box !important;
+  width: min(100vw, 1000px) !important;
+  height: calc(100vh - 20px) !important;
+  max-height: calc(100vh - 20px) !important;
+}
+
+html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
   left: 0 !important;
   transform: none !important;
   width: 100vw !important;
@@ -168,19 +178,15 @@ html[data-blog-zoom='full'] #blog_blog\.reader {
 }
 
 .postListingsHeaderName {
-  width: 40%;
+  width: 45%;
+}
+
+.postListingsHeaderSubtitle {
+  width: 35%;
 }
 
 .postListingsHeaderDate {
-  width: 22%;
-}
-
-.postListingsHeaderSize {
-  width: 14%;
-}
-
-.postListingsHeaderKind {
-  width: 24%;
+  width: 20%;
 }
 
 .postListingsRow {
@@ -216,18 +222,12 @@ html[data-blog-zoom='full'] #blog_blog\.reader {
   image-rendering: pixelated;
 }
 
+.postListingsCellSubtitle {
+  color: #555;
+}
+
 .postListingsCellDate {
   color: #555;
-}
-
-.postListingsCellSize {
-  color: #555;
-  text-align: right;
-}
-
-.postListingsCellKind {
-  color: #555;
-  font-size: 11px;
 }
 
 .postListingsStatusBar {

@@ -19,10 +19,7 @@ import { useEffect, useMemo } from 'react';
 import AboutThisSiteWindow, {
   ABOUT_THIS_SITE_APP_ID,
 } from './AboutThisSiteWindow';
-import PostListingsWindow, {
-  POST_LISTINGS_APP_ID,
-} from './PostListingsWindow';
-import PostReaderWindow from './PostReaderWindow';
+import BlogApp from './BlogApp';
 import AboutWindow, { ABOUT_APP_ID } from './AboutWindow';
 import ContactWindow, { CONTACT_APP_ID } from './ContactWindow';
 import TrashWindow from './TrashWindow';
@@ -39,6 +36,41 @@ function DesktopInit() {
   const dispatch = useAppManagerDispatch();
   const soundDispatch = useSoundDispatch();
 
+  // Watch for Classicy's auto-created "Macintosh HD" drive icon and fix it up.
+  // Classicy's internal Finder component dispatches ClassicyDesktopIconAdd for
+  // every virtual drive on mount (useEffect), so the timing vs. our own useEffect
+  // is non-deterministic. This reactive selector re-fires whenever the icon
+  // appears, regardless of which effect wins the race.
+  const needsHardDriveFix = useAppManager((state: any) =>
+    state.System.Manager.Desktop.icons.some(
+      (i: any) => i.kind === 'drive' && i.appName === 'Macintosh HD' && i.label !== 'Hard Drive'
+    )
+  );
+
+  useEffect(() => {
+    if (!needsHardDriveFix) return;
+    // Match the same rightX used for Trash. Hard Drive sits at the top of the
+    // icon column; 40px from top clears the 22px menu bar with comfortable padding.
+    const rightX = typeof window !== 'undefined' ? window.innerWidth - 100 : 900;
+    const state = useAppManager.getState();
+    useAppManager.setState({
+      System: {
+        ...state.System,
+        Manager: {
+          ...state.System.Manager,
+          Desktop: {
+            ...state.System.Manager.Desktop,
+            icons: state.System.Manager.Desktop.icons.map((i: any) =>
+              i.kind === 'drive' && i.appName === 'Macintosh HD'
+                ? { ...i, label: 'Hard Drive', location: [rightX, 40] as [number, number] }
+                : i
+            ),
+          },
+        },
+      },
+    });
+  }, [needsHardDriveFix]);
+
   // Build the persistent menu bar items
   const blogMenu = useMemo<ClassicyMenuItem[]>(
     () => [
@@ -51,16 +83,14 @@ function DesktopInit() {
             title: 'Open\u2026',
             onClickFunc: () => {
               dispatch({
-                type: 'ClassicyAppOpen',
-                app: {
-                  id: POST_LISTINGS_APP_ID,
-                  name: 'Posts',
-                  icon: '',
-                },
+                type: 'ClassicyWindowOpen',
+                app: { id: 'blog' },
+                window: { id: 'blog.listings' },
               });
               dispatch({
-                type: 'ClassicyAppFocus',
-                app: { id: POST_LISTINGS_APP_ID },
+                type: 'ClassicyWindowFocus',
+                app: { id: 'blog' },
+                window: { id: 'blog.listings' },
               });
             },
           },
@@ -103,6 +133,42 @@ function DesktopInit() {
         id: 'blog.help',
         title: 'Help',
         menuChildren: [
+          {
+            id: 'blog.help.about',
+            title: 'About',
+            onClickFunc: () => {
+              dispatch({
+                type: 'ClassicyAppOpen',
+                app: {
+                  id: ABOUT_APP_ID,
+                  name: 'About',
+                  icon: '',
+                },
+              });
+              dispatch({
+                type: 'ClassicyAppFocus',
+                app: { id: ABOUT_APP_ID },
+              });
+            },
+          },
+          {
+            id: 'blog.help.contact',
+            title: 'Contact',
+            onClickFunc: () => {
+              dispatch({
+                type: 'ClassicyAppOpen',
+                app: {
+                  id: CONTACT_APP_ID,
+                  name: 'Contact',
+                  icon: '',
+                },
+              });
+              dispatch({
+                type: 'ClassicyAppFocus',
+                app: { id: CONTACT_APP_ID },
+              });
+            },
+          },
           {
             id: 'blog.help.help-me',
             title: 'Help me\u2026',
@@ -148,40 +214,26 @@ function DesktopInit() {
       return true;
     });
 
-    // 11.c: Position icons on the right side, below where Hard Drive sits
-    const rightX = typeof window !== 'undefined' ? window.innerWidth - 80 : 900;
+    // Icon column: inset from right edge far enough that the icon + label
+    // have breathing room. Icons are 48px wide; 100px gives ~52px clearance.
+    const rightX = typeof window !== 'undefined' ? window.innerWidth - 100 : 900;
 
-    const hasAboutIcon = deduped.some((i: any) => i.appId === ABOUT_APP_ID);
-    const newIcons = hasAboutIcon
+    const hasTrashIcon = deduped.some((i: any) => i.appId === 'trash');
+    const newIcons = hasTrashIcon
       ? deduped
       : [
           ...deduped,
-          {
-            appId: ABOUT_APP_ID,
-            appName: 'About',
-            icon: ClassicyIcons.system.files.fileText, // 11.5
-            kind: 'document',
-            label: 'About',
-            location: [rightX, 64] as [number, number],
-          },
-          {
-            appId: CONTACT_APP_ID,
-            appName: 'Contact',
-            icon: ClassicyIcons.system.files.fileText, // 11.5
-            kind: 'document',
-            label: 'Contact',
-            location: [rightX, 128] as [number, number],
-          },
-          // 11.d: Trash icon in bottom-right corner
+          // Trash icon in bottom-right corner. Icon+label is ~68px tall;
+          // 120px from bottom gives ~52px clearance below the label.
           {
             appId: 'trash',
             appName: 'Trash',
-            icon: ClassicyIcons.system.desktop.trashFull, // 11.5
+            icon: ClassicyIcons.system.desktop.trashFull,
             kind: 'icon',
             label: 'Trash',
             location: [
               rightX,
-              typeof window !== 'undefined' ? window.innerHeight - 80 : 700,
+              typeof window !== 'undefined' ? window.innerHeight - 120 : 700,
             ] as [number, number],
           },
         ];
@@ -229,8 +281,7 @@ export default function ClassicyDesktopInner({
     <ClassicyAppManagerProvider appName="code.rodmachen.com">
       <ClassicyDesktop>
         <DesktopInit />
-        <PostReaderWindow initialSlug={initialSlug} />
-        <PostListingsWindow />
+        <BlogApp initialSlug={initialSlug} />
         <AboutThisSiteWindow />
         <AboutWindow />
         <ContactWindow />

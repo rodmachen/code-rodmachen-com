@@ -11,6 +11,7 @@ export default function ContactWindow() {
       id={CONTACT_APP_ID}
       name="Contact"
       icon={ClassicyIcons.system.files.fileText}
+      noDesktopIcon
       defaultWindow={CONTACT_WINDOW_ID}
     >
       <ClassicyWindow
