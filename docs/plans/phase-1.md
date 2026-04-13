@@ -50,7 +50,7 @@ These are **not** Phase 1 blockers but should be revisited before public launch.
    in App Router must wrap it in a client boundary themselves. → Step 3
    establishes that boundary.
 3. **Pre-1.0 framework (0.6.54).** → Pin the exact version, no caret.
-4. **Bundle weight unknown.** → Step 11 captures a measurement and records
+4. **Bundle weight unknown.** → Step 12 captures a measurement and records
    it in the PR description. Budget enforcement deferred to Phase 2.
 
 ---
@@ -73,7 +73,7 @@ Each role has a well-defined lane.
 - **Fills in Step 9's prompt with the exact API patterns produced by
   Steps 7 and 8** before handoff (without that, Step 9 isn't really a
   Gemini task)
-- Interprets the bundle numbers Gemini produces in Step 11
+- Interprets the bundle numbers Gemini produces in Step 12
 
 **Test posture for Steps 7–9 (and any inserted UI iteration steps):**
 **tests deferred to Step 10.** UI iteration is the wrong time to write
@@ -88,7 +88,7 @@ that Step 10 absorbs.
 
 **Gemini 3.1 Pro:**
 - Executes mechanical scaffolding and implementation work for Steps
-  1, 2, 4, 6, 9, 10, and the mechanical half of Step 11 (sub-step 11b)
+  1, 2, 4, 6, 9, 10, and the mechanical half of Step 12 (sub-step 12b)
 - Reads this plan file as its source of truth for each step
 - Produces files and pastes verification command output
 - **Does not touch git.** No staging, no commits, no pushes. Just writes
@@ -97,11 +97,11 @@ that Step 10 absorbs.
 **User (Rod):**
 - Switches the active model in Claude Code between Opus-owned steps
   (3, 5, 7, 8, plus any inserted UI iteration steps) and Gemini-executed
-  steps (1, 2, 4, 6, 9, 10, 11-mechanical)
+  steps (1, 2, 4, 6, 9, 10, 12-mechanical)
 - Runs the Gemini prompts in a separate Gemini session
 - Pastes Gemini's reply back into Claude Code so Opus can review and commit
-- Performs the one-time Vercel project setup in Step 11 (sub-step 11a)
-- Makes the DNS-cutover call in Step 11 (sub-step 11d)
+- Performs the one-time Vercel project setup in Step 12 (sub-step 12a)
+- Makes the DNS-cutover call in Step 12 (sub-step 12d)
 - Reviews and merges the PR
 
 **Verification policy:** Gemini runs the per-step verification commands
@@ -1393,33 +1393,312 @@ font-family: Geneva, "Lucida Grande", Verdana, sans-serif;
 
 ---
 
-## Step 11 — Vercel preview deploy + bundle measurement
+## Step 11 — UI polish: desktop icons, Finder-style Posts, menu bar, trash ✅
+
+**Executor:** **Opus** · **Reviewer:** Opus
+**Test posture:** tests-alongside — changes are UI/behavioral; verify with
+automated checks plus manual browser confirmation.
+
+A second round of user-reported issues after Step 10. This step addresses
+ten items grouped into sub-steps.
+
+### Background
+
+Classicy exports `ClassicyIcons` which contains bundled icon assets:
+- `ClassicyIcons.system.files.document` — document file icon
+- `ClassicyIcons.system.desktop.trashEmpty` — empty trash can icon
+- `ClassicyIcons.system.drives.disk` — hard drive icon
+
+The Classicy `ClassicyDesktopIconAdd` action (line 1674 of classicy.es.js)
+deduplicates by `appId`. Desktop icon `location` is `[left, top]` in pixels.
+Classicy persists state to `localStorage("classicyDesktopState")` which can
+cause stale duplicates during development.
+
+### Items to fix
+
+**10.5a. Fix duplicate About desktop icon and duplicate "contact" React keys.**
+
+Two issues cause the duplicate icons and React key warnings:
+
+1. The `DesktopInit` useEffect in `ClassicyDesktopInner.tsx` manually
+   splices icons into state with `useAppManager.setState()`. Due to
+   localStorage persistence and React strict mode, duplicate icons can
+   accumulate. Fix: before setting icons, deduplicate by `appId` so that
+   even if stale state exists, only one icon per `appId` survives.
+
+2. The Contact desktop icon uses `appId: 'contact'` which matches
+   `CONTACT_APP_ID = 'contact'` exactly. Same for About (`siteAbout`).
+   The `ClassicyApp` components dispatch `ClassicyDesktopIconAdd` unless
+   `noDesktopIcon` is set — our apps have `noDesktopIcon`, but Classicy's
+   internal key generation for window/app tracking may still produce
+   duplicate React keys when both the desktop icon and the app share an
+   `appId`. Fix: rename the desktop icon `appId` values to be distinct
+   from the `ClassicyApp` component IDs. Use `appId: 'desktop.about'`
+   and `appId: 'desktop.contact'`. Then wire the icon's click behavior
+   to open the corresponding app (via `event` / `eventData` fields on the
+   icon, or by subscribing to icon open events and dispatching
+   `ClassicyAppOpen` for the real app).
+
+   **Investigation needed**: check how Classicy wires desktop icon
+   double-click to app opening. The `ClassicyDesktopIconOpen` action
+   (line 1667) dispatches `ClassicyAppOpen` using the icon's `appId`.
+   If the icon `appId` doesn't match a `ClassicyApp`, the app won't open.
+   Options:
+   - Keep matching appIds but investigate the actual source of the
+     duplicate React keys — it may be a different issue entirely.
+   - Use the icon's `event` / `eventData` fields to dispatch a custom
+     action, and handle that in a subscriber.
+
+   Start by checking whether simply deduplicating icons (fix 1) also
+   resolves the React key warnings. If so, matching appIds are fine.
+
+**10.5b. Use Classicy's built-in document icon for About/Contact desktop icons.**
+
+Replace the transparent 1x1 GIF with `ClassicyIcons.system.files.document`.
+Import `ClassicyIcons` from `'classicy'` (it's exported at line 36434).
+
+This should also fix the `GET /document` 404 errors — the transparent GIF
+may be causing Classicy's icon rendering pipeline to fall through to a
+URL-based icon lookup.
+
+**10.5c. Move About/Contact icons to right side of desktop, below Hard Drive.**
+
+Mac convention: icons stack top-to-bottom on the right edge. Hard Drive
+is already on the right (placed by Classicy's Finder). Position About and
+Contact below it.
+
+The Hard Drive icon's position is auto-placed by Classicy. Investigate its
+default position, then place About and Contact below it. Approximate
+positions: About at `[right-edge, hard-drive-top + 80]`, Contact at
+`[right-edge, hard-drive-top + 160]`. Since the desktop width varies,
+use a useEffect that reads the desktop element's width or reads the Hard
+Drive icon's current position from state, then positions accordingly.
+
+Alternatively, use fixed right-side positions that work at common screen
+widths (e.g., `location: [window.innerWidth - 80, 80]` for About,
+`[window.innerWidth - 80, 160]` for Contact). Classicy's icon location
+tuple is `[left, top]`.
+
+**10.5d. Add Trash icon to desktop.**
+
+Add a desktop icon using `ClassicyIcons.system.desktop.trashEmpty` with
+label "Trash". Position it in the bottom-right corner (Mac convention).
+On double-click, open `https://www.utexas.edu/` in a new tab.
+
+Use the icon's `onClickFunc` field (Classicy supports this per line 1687)
+or use the `event`/`eventData` fields. The `onClickFunc` approach is
+simplest — set it to `() => window.open('https://www.utexas.edu/', '_blank')`.
+
+Note: Classicy icons respond to double-click for opening, not single-click.
+Investigate whether `onClickFunc` fires on double-click or single-click.
+If it fires on single-click, use the `event`/`eventData` pattern instead,
+or listen for the `ClassicyDesktopIconOpen` action in a subscriber.
+
+**10.5e. Make menu bar persistent — always show File/Edit/View/Help.**
+
+Currently the blog window's `appMenu` only shows when the blog app is
+focused. When focus moves to Finder, desktop, or a sub-window, the menu
+items disappear.
+
+Fix: Move the menu bar items from `PostReaderWindow`'s `appMenu` prop to
+the desktop-level system menu or find a way to make the blog app always
+own the menu bar. Options to investigate:
+
+1. **Global menu approach**: Classicy's `ClassicyDesktop` or the state
+   manager may support a global/default app menu. Check if there's a
+   `defaultAppMenu` or similar concept.
+2. **Finder menu override**: Register the File/Edit/View/Help items on the
+   Finder.app itself (since Finder is always "running"). This way, when
+   the desktop or Finder is focused, the same menus appear.
+3. **Force blog focus**: Keep the blog app focused at all times by
+   intercepting focus changes. This is fragile and not recommended.
+4. **addSystemMenu prop**: The `ClassicyApp` component has an
+   `addSystemMenu` prop (line 7471). Investigate whether setting this
+   adds the app's menu to the system-level menu bar permanently.
+
+The preferred approach is (2) or (4) — whichever Classicy supports.
+
+**10.5f. Hard Drive icon should open Posts listings (same as File > Open).**
+
+Currently the Hard Drive desktop icon opens Classicy's built-in Finder
+window showing a fake filesystem (Applications, Library, etc.). It should
+instead open the Posts listings window.
+
+Fix: Intercept the Hard Drive icon's open action. When the Hard Drive
+icon is double-clicked, Classicy dispatches `ClassicyDesktopIconOpen`
+which triggers `ClassicyAppOpen` for `Finder.app`. Instead, we want it
+to open the PostListingsWindow.
+
+Options:
+1. Subscribe to state changes and detect when Finder.app opens, then
+   immediately close it and open PostListingsWindow instead.
+2. Remove the default Hard Drive icon and replace it with a custom one
+   that has the same visual but opens PostListingsWindow.
+3. Override the Finder.app's behavior.
+
+Option 2 is cleanest. Remove the Macintosh HD renaming logic and instead:
+- Remove the default Hard Drive icon (via `ClassicyDesktopIconRemove`)
+- Add a custom "Hard Drive" icon with the disk icon
+  (`ClassicyIcons.system.drives.disk`) that dispatches `ClassicyAppOpen`
+  for `POST_LISTINGS_APP_ID` on double-click.
+
+**10.5g. Posts listings window: Finder-style appearance.**
+
+Transform the PostListingsWindow to look like a Classicy Finder window:
+
+1. **Window controls**: Enable `zoomable={true}` and `collapsable={true}`
+   (WindowShade) on the `ClassicyWindow`.
+2. **Title bar icon**: Set the window's icon to
+   `ClassicyIcons.system.drives.disk` (the Hard Drive icon).
+3. **Column headers**: Change from Name/Date Added/Tags to
+   Name/Date Modified/Size/Kind:
+   - **Name**: post title (sortable, click to sort A-Z / Z-A)
+   - **Date Modified**: post date (sortable, click to sort newest/oldest,
+     default sort)
+   - **Size**: calculated HTML body byte size, displayed human-readable
+     (e.g., "2.4 KB"). Sortable.
+   - **Kind**: post tags joined (e.g., "coding, react"). NOT sortable.
+4. **Sort triangles**: Active sort column shows a triangle indicator
+   (▲ ascending, ▼ descending). Clicking a sortable header toggles
+   direction. Default: Date Modified descending.
+5. **Status bar**: Bottom of the window shows "{N} items, {total bytes}"
+   (e.g., "4 items, 12.8 KB"). Style to match Classicy Finder's bottom
+   info area.
+6. **Row styling**: Keep current hover highlight. Each row should show a
+   small document icon before the name (using
+   `ClassicyIcons.system.files.document` or similar small icon).
+
+Byte calculation: `new Blob([post.body]).size` gives the byte count of the
+HTML body string. This runs at module load time (posts are statically
+imported), so no performance concern.
+
+**10.5h. Remove italic from post subtitle.**
+
+In `blog-window.css`, remove `font-style: italic` from `.blogPostSubtitle`.
+
+**10.5i. Fix GET /document 404 errors.**
+
+These are likely caused by the transparent GIF icons or empty `icon=""`
+props. Fixing 10.5b (using real Classicy icons) should resolve the 404s.
+If they persist after 10.5b, investigate further:
+- Check if any `<img src="">` elements exist (empty src causes a request
+  to the current page)
+- Check if Classicy's icon resolution falls back to a URL-based fetch
+  for `kind: 'document'`
+
+This item may be resolved by 10.5b — verify after that fix is applied.
+
+**10.5j. Bondi Blue teal stipple desktop background.**
+
+The previous iteration of the site had a teal stippled desktop background
+inspired by the Bondi Blue iMac. Restore it by applying a tiny 2×2 pixel
+PNG pattern to the Classicy desktop area.
+
+CSS to add (as a utility class or applied directly to the desktop element):
+
+```css
+/* Bondi Blue stipple desktop background */
+.bg-os8-bondi {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGNgKO9gWLWKAYTLOwAeNASnVBlSOwAAAABJRU5ErkJggg==");
+  background-repeat: repeat;
+  background-size: 2px 2px;
+  image-rendering: pixelated;
+}
+```
+
+The Base64 PNG uses `#007788` and `#00AAAA` pixels for a classic teal iMac
+vibe. Apply the class to the Classicy desktop element — either via a
+`className` prop on `ClassicyDesktop` or by targeting the desktop element
+with a CSS selector and applying the properties directly. Ensure the
+background covers the full viewport behind all windows and desktop icons.
+
+### Execution order
+
+1. **10.5h** (trivial CSS fix — subtitle italic)
+2. **10.5b** (use real document icons — may fix 404s)
+3. **10.5a** (deduplicate icons, fix React key warnings)
+4. **10.5c** (reposition icons to right side)
+5. **10.5d** (add Trash icon)
+6. **10.5e** (persistent menu bar)
+7. **10.5f** (Hard Drive opens Posts)
+8. **10.5g** (Finder-style Posts listings)
+9. **10.5i** (verify 404s are gone; investigate if not)
+10. **10.5j** (Bondi Blue desktop background)
+
+### Files modified
+
+- `app/components/blog-window.css` (10.5h, 10.5g status bar and sort styles)
+- `app/components/ClassicyDesktopInner.tsx` (10.5a, 10.5b, 10.5c, 10.5d,
+  10.5e, 10.5f — icon management, menu bar, Hard Drive behavior)
+- `app/components/PostListingsWindow.tsx` (10.5g — Finder-style redesign)
+- `app/components/PostReaderWindow.tsx` (10.5e — move appMenu to global
+  level if needed)
+- `app/globals.css` or inline in `ClassicyDesktopInner.tsx` (10.5j — Bondi
+  Blue desktop background)
+
+### Verify
+
+- `npm run content:build` — clean
+- `npx tsc --noEmit` — clean
+- `npm run lint` — clean
+- `npm test` — unit suite passes
+- `npm run build` — succeeds
+- `npm run test:e2e` — all existing tests still pass
+- **Manual browser checks:**
+  1. Desktop shows exactly one About icon and one Contact icon with
+     document icons visible, positioned on the right side below Hard Drive
+  2. Trash icon visible in bottom-right corner; double-clicking opens
+     https://www.utexas.edu/ in a new tab
+  3. Menu bar always shows File/Edit/View/Help regardless of which window
+     is focused or if the desktop is clicked
+  4. Double-clicking Hard Drive opens the Posts listings window (not the
+     Finder filesystem)
+  5. Posts listings has Name/Date Modified/Size/Kind columns with sort
+     triangles on Name, Date Modified, Size; clicking sorts; Kind is
+     not sortable
+  6. Posts listings shows item count and total bytes in a status bar
+  7. Posts listings has Zoom and WindowShade buttons in title bar
+  8. Posts listings title bar shows the Hard Drive icon
+  9. Post subtitle is NOT italicized
+  10. Browser console has no `GET /document` 404 errors
+  11. Browser console has no "duplicate key" React warnings
+  12. File > Open still works and opens the same Posts listings window
+  13. Desktop background shows a teal Bondi Blue stipple pattern (not the
+      default Classicy background)
+
+### Commit message
+
+`Step 11: UI polish — desktop icons, Finder-style Posts, persistent menu, trash, Bondi Blue background`
+
+---
+
+## Step 12 — Vercel preview deploy + bundle measurement
 
 **Executor:** Gemini 3.1 Pro (mechanical) + Opus (interpret) + User (Vercel setup) · **Reviewer:** Opus
 **Test posture:** tests-alongside
 
 Phase 1's exit criterion is a working preview URL. Per pre-plan §5.8, do
 **not** touch the production `code.rodmachen.com` DNS in this phase
-(decision pending — see §11d).
+(decision pending — see §12d).
 
-Step 11 has four sub-steps with explicit ordering. 11a (user) and 11b
-(Gemini) are independent and can run in parallel; 11c and 11d are
+Step 12 has four sub-steps with explicit ordering. 12a (user) and 12b
+(Gemini) are independent and can run in parallel; 12c and 12d are
 strictly sequential and must wait for both.
 
 Files created/modified across the whole step:
 - `package.json` — add `@next/bundle-analyzer` as a dev dep, add
-  `npm run analyze` script (11b)
-- `next.config.mjs` — wire the analyzer behind `ANALYZE=true` (11b)
+  `npm run analyze` script (12b)
+- `next.config.mjs` — wire the analyzer behind `ANALYZE=true` (12b)
 - PR description — record preview URL, bundle numbers, top-10 chunks,
-  any deployed-preview console warnings (11d)
+  any deployed-preview console warnings (12d)
 
-**Commit message:** `Step 11: Vercel preview deploy and bundle measurement`
+**Commit message:** `Step 12: Vercel preview deploy and bundle measurement`
 
 ---
 
-### Step 11a — Vercel project setup (User, one-time)
+### Step 12a — Vercel project setup (User, one-time)
 
-**Owner:** User. Cannot be done by Gemini or Opus. Can run in parallel with 11b.
+**Owner:** User. Cannot be done by Gemini or Opus. Can run in parallel with 12b.
 
 1. In the Vercel dashboard, create a new project from the
    `rodmachen/code-rodmachen-com` GitHub repo.
@@ -1429,19 +1708,19 @@ Files created/modified across the whole step:
 3. Confirm the framework preset auto-detects as **Next.js**.
 4. Set the production branch to `main` so feature-branch pushes produce
    *preview* deploys, not production deploys.
-5. **Do not assign a custom domain yet.** The DNS decision lives in 11d.
+5. **Do not assign a custom domain yet.** The DNS decision lives in 12d.
 6. Report back to Opus: the project URL (e.g.
    `vercel.com/<team>/code-rodmachen-com`) and confirmation that the
    framework preset is Next.js.
 
-**Verify (11a):** Vercel project exists, is connected to the GitHub repo,
+**Verify (12a):** Vercel project exists, is connected to the GitHub repo,
 production branch is `main`, no custom domain assigned.
 
 ---
 
-### Step 11b — Bundle analyzer + local measurement (Gemini 3.1 Pro)
+### Step 12b — Bundle analyzer + local measurement (Gemini 3.1 Pro)
 
-**Owner:** Gemini 3.1 Pro. Can run in parallel with 11a. Does **not**
+**Owner:** Gemini 3.1 Pro. Can run in parallel with 12a. Does **not**
 touch git or Vercel.
 
 Mechanical work — see the "Gemini prompt" subsection below for the exact
@@ -1452,17 +1731,17 @@ deliverables. Outputs:
 - Pass/fail of Playwright e2e against a **production** build (`next start`,
   not `next dev`)
 
-**Verify (11b):** Gemini's reply includes all five deliverables listed in
+**Verify (12b):** Gemini's reply includes all five deliverables listed in
 the prompt, with raw build output pasted (not summarized).
 
 ---
 
-### Step 11c — Review, commit, push (Opus)
+### Step 12c — Review, commit, push (Opus)
 
-**Owner:** Opus. **Strict prerequisite: 11a AND 11b are both done.**
+**Owner:** Opus. **Strict prerequisite: 12a AND 12b are both done.**
 
 Why both: pushing the commit triggers a Vercel deploy, and that deploy
-needs a Vercel project to land in (11a). Pushing without 11a would just
+needs a Vercel project to land in (12a). Pushing without 12a would just
 sit on GitHub with no preview URL.
 
 1. Re-run all of Gemini's verification commands locally (per the project's
@@ -1470,17 +1749,17 @@ sit on GitHub with no preview URL.
    `npm run build`, `ANALYZE=true npm run build`, e2e against
    `next start`.
 2. Stage Gemini's `package.json` and `next.config.mjs` changes.
-3. Commit with the Step 11 message.
+3. Commit with the Step 12 message.
 4. Push the branch. The Vercel GitHub integration auto-creates a preview
-   deploy against the new project from 11a.
+   deploy against the new project from 12a.
 5. Wait for the Vercel deploy to finish; capture the preview URL.
 
-**Verify (11c):** local runs all green, commit pushed, Vercel preview URL
+**Verify (12c):** local runs all green, commit pushed, Vercel preview URL
 returned (typically `code-rodmachen-com-<hash>-<team>.vercel.app`).
 
 ---
 
-### Step 11d — Preview verification + interpretation + DNS decision (Opus + User)
+### Step 12d — Preview verification + interpretation + DNS decision (Opus + User)
 
 **Owner:** Opus interprets the numbers and verifies the preview; User
 decides whether to assign the custom domain.
@@ -1512,16 +1791,16 @@ decides whether to assign the custom domain.
    exact records), and record the cutover in the PR description as a
    scope deviation from the original plan.
 
-**Verify (11d):** preview URL renders cleanly, PR description updated,
+**Verify (12d):** preview URL renders cleanly, PR description updated,
 DNS decision recorded one way or the other.
 
 ### Gemini prompt (mechanical half only — Opus interprets the numbers)
 
-> You are executing the **mechanical half of Step 11** (sub-step 11b)
+> You are executing the **mechanical half of Step 12** (sub-step 12b)
 > of the Phase 1 plan for `code.rodmachen.com`. Read `docs/plans/phase-1.md`
 > for full context. Your scope is **bundle analysis and measurement only**
-> — the Vercel project setup (11a) and the decision about whether the
-> bundle numbers are acceptable (11d) are not your call.
+> — the Vercel project setup (12a) and the decision about whether the
+> bundle numbers are acceptable (12d) are not your call.
 >
 > **Starting state:** branch `feature/classicy-phase-1`. Steps 1–10 have
 > landed. The full Phase 1 UI is working locally and is fully tested.
@@ -1578,8 +1857,8 @@ DNS decision recorded one way or the other.
 >
 > **Vercel deploy setup is NOT your job.** The user creates the new Vercel
 > project (`code-rodmachen-com`) manually from the GitHub repo in
-> sub-step 11a. Do not run any `vercel` CLI commands or touch Vercel
-> configuration. Your scope is sub-step 11b only — the bundle analyzer
+> sub-step 12a. Do not run any `vercel` CLI commands or touch Vercel
+> configuration. Your scope is sub-step 12b only — the bundle analyzer
 > wiring and the local measurement runs.
 
 ---
@@ -1614,7 +1893,7 @@ Phase 1 is done when **all** of the following are true:
    enforcement yet — that's a Phase 2 decision)
 10. The production `code.rodmachen.com` DNS decision is recorded in the
     PR description (either "untouched per plan" or "cut over with the
-    user's explicit approval in §11d")
+    user's explicit approval in §12d")
 
 When all ten hold, the PR is ready for human review. After merge,
 Phase 2 picks up: theme/sound decisions, content migration from the old
@@ -1636,13 +1915,13 @@ DNS cutover.
 | 7 — Chrome and menu bars | **Opus** | Opus |
 | 8 — Multi-window architecture | **Opus** | Opus |
 | 9 — About/Contact + Geneva font | Gemini 3.1 Pro | Opus |
+| 11 — UI polish (icons, Finder Posts, menu, trash, Bondi Blue bg) | **Opus** | Opus |
 | (UI iteration steps may be inserted here — usually **Opus**) | | |
-| 10 — Test catch-up (deferred UI tests) | Gemini 3.1 Pro | Opus |
-| 11 — Deploy + measure | Gemini (mechanical) + Opus (interpret) + User (Vercel + DNS) | Opus |
+| 12 — Deploy + measure | Gemini (mechanical) + Opus (interpret) + User (Vercel + DNS) | Opus |
 
 **Model switches happen between Steps 2→3, 3→4, 4→5, 5→6, 6→7, 8→9,
 and (after any inserted UI iteration steps) when entering Step 10 and
-again entering Step 11b.** At each switch the user stops and changes
+again entering Step 12b.** At each switch the user stops and changes
 the active model in Claude Code, then runs the corresponding Gemini
 prompt (from the step's "Gemini prompt" subsection) in a separate
 Gemini session, then pastes Gemini's reply back into a Claude Code

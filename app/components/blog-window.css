@@ -62,7 +62,6 @@ html[data-blog-zoom='full'] #blog_blog\.reader {
 
 .blogPostSubtitle {
   margin: 0 0 4px 0;
-  font-style: italic;
   color: #555;
 }
 
@@ -112,9 +111,15 @@ html[data-blog-zoom='full'] #blog_blog\.reader {
 
 /* Post listings window */
 .postListingsContainer {
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  overflow-y: auto;
   background: #ffffff;
+}
+
+.postListingsScrollArea {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .postListingsTable {
@@ -138,22 +143,44 @@ html[data-blog-zoom='full'] #blog_blog\.reader {
   border-right: 1px solid #c0c0c0;
   font-weight: 600;
   font-size: 11px;
+  user-select: none;
 }
 
 .postListingsTable th:last-child {
   border-right: none;
 }
 
+.postListingsHeaderSortable {
+  cursor: pointer;
+}
+
+.postListingsHeaderSortable:hover {
+  background: #cccccc;
+}
+
+.postListingsHeaderSortable:active {
+  background: #bbbbbb;
+}
+
+.postListingsSortIndicator {
+  margin-left: 4px;
+  font-size: 9px;
+}
+
 .postListingsHeaderName {
-  width: 45%;
+  width: 40%;
 }
 
 .postListingsHeaderDate {
-  width: 25%;
+  width: 22%;
 }
 
-.postListingsHeaderTags {
-  width: 30%;
+.postListingsHeaderSize {
+  width: 14%;
+}
+
+.postListingsHeaderKind {
+  width: 24%;
 }
 
 .postListingsRow {
@@ -176,11 +203,47 @@ html[data-blog-zoom='full'] #blog_blog\.reader {
   font-weight: 500;
 }
 
+.postListingsCellNameContent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.postListingsCellNameIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
 .postListingsCellDate {
   color: #555;
 }
 
-.postListingsCellTags {
+.postListingsCellSize {
+  color: #555;
+  text-align: right;
+}
+
+.postListingsCellKind {
   color: #555;
   font-size: 11px;
+}
+
+.postListingsStatusBar {
+  padding: 4px 8px;
+  border-top: 1px solid #808080;
+  background: #dddddd;
+  font-size: 11px;
+  font-family: Geneva, "Lucida Grande", Verdana, sans-serif;
+  color: #333;
+  flex-shrink: 0;
+}
+
+/* Bondi Blue stipple desktop background */
+#classicyDesktop {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGNgKO9gWLWKAYTLOwAeNASnVBlSOwAAAABJRU5ErkJggg==") !important;
+  background-repeat: repeat !important;
+  background-size: 2px 2px !important;
+  image-rendering: pixelated;
 }
