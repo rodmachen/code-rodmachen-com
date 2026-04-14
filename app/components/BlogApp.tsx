@@ -166,19 +166,20 @@ function ReaderWindow({
 }) {
   const dispatch = useAppManagerDispatch();
   const [zoom, setZoom] = useState<ZoomMode>('normal');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    dispatch({
-      type: 'ClassicyWindowOpen',
-      app: { id: 'blog' },
-      window: { id: `blog.reader.${slug}` },
-    });
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     dispatch({
       type: 'ClassicyWindowFocus',
       app: { id: 'blog' },
       window: { id: `blog.reader.${slug}` },
     });
-  }, [dispatch, slug]);
+  }, [dispatch, slug, mounted]);
 
   useEffect(() => {
     document.documentElement.dataset.blogZoom = zoom;
@@ -352,9 +353,38 @@ export default function BlogApp({ initialSlug }: { initialSlug: string }) {
       window.history.replaceState(null, '', '/');
     } else if (typeof focusedWindowId === 'string' && focusedWindowId.startsWith('blog.reader.')) {
       const slug = focusedWindowId.replace('blog.reader.', '');
-      window.history.replaceState(null, '', `/posts/${slug}`);
+      const newPath = `/posts/${slug}`;
+      if (window.location.pathname !== newPath) {
+        window.history.pushState(null, '', newPath);
+      }
     }
   }, [focusedWindowId]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/') {
+        dispatch({
+          type: 'ClassicyWindowFocus',
+          app: { id: 'blog' },
+          window: { id: 'blog.listings' },
+        });
+      } else if (path.startsWith('/posts/')) {
+        const slug = path.replace('/posts/', '');
+        setOpenSlugs((prev) => {
+          if (!prev.includes(slug)) return [...prev, slug];
+          dispatch({
+            type: 'ClassicyWindowFocus',
+            app: { id: 'blog' },
+            window: { id: `blog.reader.${slug}` },
+          });
+          return prev;
+        });
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [dispatch]);
 
   useEffect(() => {
     if (initialSlug && openSlugs.length === 0) {
