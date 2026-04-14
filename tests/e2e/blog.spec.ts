@@ -13,15 +13,15 @@ function collectConsoleErrors(page: Page): string[] {
   return errors;
 }
 
-test('home page renders post reader with content', async ({ page }) => {
+test('home page renders post listings window', async ({ page }) => {
   const errors = collectConsoleErrors(page);
   await page.goto('/');
 
-  const window = page.getByTestId('blog-window');
-  await expect(window).toBeVisible();
+  const listingsWindow = page.getByTestId('post-listings-window');
+  await expect(listingsWindow).toBeVisible();
 
-  const body = page.getByTestId('post-body');
-  await expect(body).toContainText('Welcome to the new rebuild');
+  // At least one post row should be visible
+  await expect(page.getByTestId('post-listing-hello-classicy')).toBeVisible();
 
   expect(errors).toEqual([]);
 });
