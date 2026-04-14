@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "eslint .",
     "content:build": "velite build",
@@ -19,6 +20,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "16.2.3",
     "@playwright/test": "1.59.1",
     "@shikijs/rehype": "4.0.2",
     "@shikijs/transformers": "4.0.2",

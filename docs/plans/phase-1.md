@@ -2190,9 +2190,9 @@ DNS decision recorded one way or the other.
 > **Vercel deploy setup is NOT your job.** The user creates the new Vercel
 > project (`code-rodmachen-com`) manually from the GitHub repo in
 > sub-step 14a. Do not run any `vercel` CLI commands or touch Vercel
-> configuration. Your scope is sub-step 13b only — the bundle analyzer
+> configuration. Your scope is sub-step 14b only — the bundle analyzer
 > wiring and the local measurement runs.
-14
+
 ---
 
 ## End-to-end verification (Phase 1 exit criteria)
