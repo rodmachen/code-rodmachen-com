@@ -1,0 +1,101 @@
+.postBody {
+  /* Body text */
+  font-family: Geneva, "Lucida Grande", Verdana, sans-serif;
+  line-height: 1.6;
+  max-width: 65ch;
+}
+
+/* Headings: Chicago font, unsmoothed for pixel-accurate retro look */
+.postBody h1,
+.postBody h2,
+.postBody h3,
+.postBody h4,
+.postBody h5,
+.postBody h6 {
+  font-family: 'ChicagoFLF', serif;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: auto;
+  font-smooth: never;
+  text-rendering: optimizeSpeed;
+  font-weight: normal;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+}
+
+/* Exact integer pixel sizes */
+.postBody h1 { font-size: 24px; }
+.postBody h2 { font-size: 18px; }
+.postBody h3 { font-size: 14px; }
+.postBody h4 { font-size: 12px; }
+.postBody h5 { font-size: 12px; }
+.postBody h6 { font-size: 12px; }
+
+/* Code blocks */
+.postBody pre {
+  font-family: monospace;
+  background-color: #f8f8f8;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid #ccc;
+}
+
+/* Inline code (not inside a <pre> — Shiki handles <pre><code> itself) */
+.postBody :not(pre) > code {
+  font-family: monospace;
+  background-color: #f0f0f0;
+  padding: 0.2em 0.4em;
+  border-radius: 2px;
+}
+
+/* Blockquote */
+.postBody blockquote {
+  border-left: 4px solid #ccc;
+  font-style: italic;
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-right: 0;
+  color: #555;
+}
+
+/* Lists */
+.postBody ul,
+.postBody ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1em;
+}
+
+/* Tables */
+.postBody table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+
+.postBody th,
+.postBody td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.postBody th {
+  background-color: #eee;
+}
+
+/* Links */
+.postBody a {
+  color: #0000ee;
+  text-decoration: none;
+}
+
+.postBody a:hover {
+  text-decoration: underline;
+}
+
+/*
+ * ChicagoFLF is declared by Classicy itself in classicy/dist/classicy.css
+ * as an inline base64 WOFF2 @font-face. app/layout.tsx already imports
+ * that stylesheet, so the font is available app-wide without a second
+ * declaration here.
+ */
