@@ -26,7 +26,7 @@ test('smoke test - Classicy desktop mounts without errors', async ({
   await page.goto('/');
 
   await expect(page.locator('#classicyDesktop')).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: /blog/i }).first()).toBeVisible();
+  await expect(page.getByTestId('post-listings-window')).toBeVisible();
 
   expect(failedRequests).toEqual([]);
 
