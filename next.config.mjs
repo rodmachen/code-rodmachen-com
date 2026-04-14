@@ -10,4 +10,10 @@ if (!globalThis.__VELITE_STARTED) {
   await build({ watch: dev, clean: !dev });
 }
 
-export default nextConfig;
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+export default withAnalyzer(nextConfig);
