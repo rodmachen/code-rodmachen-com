@@ -1,46 +1,53 @@
 /* Menu bar: flex layout so the speaker widget renders to the left of the
    clock in DOM order, and the app switcher/widgets hug the right edge. */
 .classicyDesktopMenu {
-  display: flex !important;
+  display: flex;
   align-items: stretch;
   flex-wrap: nowrap;
 }
 
 .classicyDesktopMenu > li {
-  float: none !important;
+  float: none;
 }
 
 .classicyDesktopMenuAppSwitcher {
-  margin-left: auto !important;
+  margin-left: auto;
 }
 
 /* Window framing: center the blog window under the menu bar, full viewport
-   height. The `data-blog-zoom` attribute on <html> flips between the 1000px
-   cap (Normal) and full width (Full Width). Classicy applies inline
-   position/size styles on this node, so we override with !important. */
+   height. Classicy applies inline left/top/width/height styles on each
+   window node — CSS !important is the only way to override inline styles. */
 /* Listings window: centered, full height below menu bar */
 #blog_blog\.listings {
-  box-sizing: border-box !important;
+  box-sizing: border-box;
+  /* WHY: overrides Classicy's inline left:0 — centers the window. */
   left: 50% !important;
+  /* WHY: overrides Classicy's inline top:22px. */
   top: 20px !important;
-  transform: translateX(-50%) !important;
+  transform: translateX(-50%);
+  /* WHY: overrides Classicy's inline width:1000px — responsive cap. */
   width: min(100vw, 1000px) !important;
+  /* WHY: overrides Classicy's inline height — fills viewport. */
   height: calc(100vh - 20px) !important;
-  max-height: calc(100vh - 20px) !important;
+  max-height: calc(100vh - 20px);
 }
 
 /* Reader windows: attribute selector matches dynamic IDs like
    blog_blog.reader.hello-classicy, blog_blog.reader.typography-test, etc. */
 [id^="blog_blog.reader"] {
-  box-sizing: border-box !important;
+  box-sizing: border-box;
+  /* WHY: overrides Classicy's inline width — responsive cap. */
   width: min(100vw, 1000px) !important;
+  /* WHY: overrides Classicy's inline height — fills viewport. */
   height: calc(100vh - 20px) !important;
-  max-height: calc(100vh - 20px) !important;
+  max-height: calc(100vh - 20px);
 }
 
 html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
+  /* WHY: overrides Classicy's inline left (window position) in full-width mode. */
   left: 0 !important;
-  transform: none !important;
+  transform: none;
+  /* WHY: overrides Classicy's inline width in full-width mode. */
   width: 100vw !important;
 }
 
@@ -242,16 +249,16 @@ html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
 
 /* Bondi Blue stipple desktop background */
 #classicyDesktop {
-  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGNgKO9gWLWKAYTLOwAeNASnVBlSOwAAAABJRU5ErkJggg==") !important;
-  background-repeat: repeat !important;
-  background-size: 2px 2px !important;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGNgKO9gWLWKAYTLOwAeNASnVBlSOwAAAABJRU5ErkJggg==");
+  background-repeat: repeat;
+  background-size: 2px 2px;
   image-rendering: pixelated;
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
