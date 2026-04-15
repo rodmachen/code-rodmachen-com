@@ -17,17 +17,10 @@ import AboutThisSiteWindow, {
   ABOUT_THIS_SITE_APP_ID,
 } from './AboutThisSiteWindow';
 import BlogApp from './BlogApp';
-import AboutWindow, { ABOUT_APP_ID } from './AboutWindow';
-import ContactWindow, { CONTACT_APP_ID } from './ContactWindow';
+import AboutWindow from './AboutWindow';
+import ContactWindow from './ContactWindow';
+import { buildBlogMenu } from '../lib/menus';
 import TrashWindow from './TrashWindow';
-
-type ClassicyMenuItem = {
-  id: string;
-  title?: string;
-  disabled?: boolean;
-  onClickFunc?: () => void;
-  menuChildren?: ClassicyMenuItem[];
-};
 
 function DesktopInit() {
   const dispatch = useAppManagerDispatch();
@@ -68,114 +61,9 @@ function DesktopInit() {
     });
   }, [needsHardDriveFix]);
 
-  // Build the persistent menu bar items
-  const blogMenu = useMemo<ClassicyMenuItem[]>(
-    () => [
-      {
-        id: 'blog.file',
-        title: 'File',
-        menuChildren: [
-          {
-            id: 'blog.file.open',
-            title: 'Open\u2026',
-            onClickFunc: () => {
-              dispatch({
-                type: 'ClassicyWindowOpen',
-                app: { id: 'blog' },
-                window: { id: 'blog.listings' },
-              });
-              dispatch({
-                type: 'ClassicyWindowFocus',
-                app: { id: 'blog' },
-                window: { id: 'blog.listings' },
-              });
-            },
-          },
-        ],
-      },
-      {
-        id: 'blog.edit',
-        title: 'Edit',
-        menuChildren: [
-          {
-            id: 'blog.edit.posts',
-            title: 'Edit Posts',
-            disabled: true,
-          },
-        ],
-      },
-      {
-        id: 'blog.view',
-        title: 'View',
-        menuChildren: [
-          {
-            id: 'blog.view.normal',
-            title: 'Normal',
-            disabled: true,
-            onClickFunc: () => {
-              document.documentElement.dataset.blogZoom = 'normal';
-            },
-          },
-          {
-            id: 'blog.view.full',
-            title: 'Full Width',
-            disabled: true,
-            onClickFunc: () => {
-              document.documentElement.dataset.blogZoom = 'full';
-            },
-          },
-        ],
-      },
-      {
-        id: 'blog.help',
-        title: 'Help',
-        menuChildren: [
-          {
-            id: 'blog.help.about',
-            title: 'About',
-            onClickFunc: () => {
-              dispatch({
-                type: 'ClassicyAppOpen',
-                app: {
-                  id: ABOUT_APP_ID,
-                  name: 'About',
-                  icon: '',
-                },
-              });
-              dispatch({
-                type: 'ClassicyAppFocus',
-                app: { id: ABOUT_APP_ID },
-              });
-            },
-          },
-          {
-            id: 'blog.help.contact',
-            title: 'Contact',
-            onClickFunc: () => {
-              dispatch({
-                type: 'ClassicyAppOpen',
-                app: {
-                  id: CONTACT_APP_ID,
-                  name: 'Contact',
-                  icon: '',
-                },
-              });
-              dispatch({
-                type: 'ClassicyAppFocus',
-                app: { id: CONTACT_APP_ID },
-              });
-            },
-          },
-          {
-            id: 'blog.help.help-me',
-            title: 'Help me\u2026',
-            onClickFunc: () => {
-              window.open('https://www.google.com', '_blank');
-            },
-          },
-        ],
-      },
-    ],
+  // Build the persistent menu bar items (View items disabled — no Reader window focused at desktop level)
+  const blogMenu = useMemo(
+    () => buildBlogMenu({ dispatch, disableViewItems: true }),
     [dispatch],
   );
 
