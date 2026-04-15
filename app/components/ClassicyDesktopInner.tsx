@@ -8,11 +8,8 @@ import {
   ClassicyAppManagerProvider,
   ClassicyDesktop,
   ClassicyIcons,
-  // @ts-ignore - runtime export not in classicy's d.ts
   useAppManager,
-  // @ts-ignore - runtime export not in classicy's d.ts
   useAppManagerDispatch,
-  // @ts-ignore - runtime export not in classicy's d.ts
   useSoundDispatch,
 } from 'classicy';
 import { useEffect, useMemo } from 'react';
@@ -41,9 +38,9 @@ function DesktopInit() {
   // every virtual drive on mount (useEffect), so the timing vs. our own useEffect
   // is non-deterministic. This reactive selector re-fires whenever the icon
   // appears, regardless of which effect wins the race.
-  const needsHardDriveFix = useAppManager((state: any) =>
+  const needsHardDriveFix = useAppManager((state) =>
     state.System.Manager.Desktop.icons.some(
-      (i: any) => i.kind === 'drive' && i.appName === 'Macintosh HD' && i.label !== 'Hard Drive'
+      (i) => i.kind === 'drive' && i.appName === 'Macintosh HD' && i.label !== 'Hard Drive'
     )
   );
 
@@ -60,7 +57,7 @@ function DesktopInit() {
           ...state.System.Manager,
           Desktop: {
             ...state.System.Manager.Desktop,
-            icons: state.System.Manager.Desktop.icons.map((i: any) =>
+            icons: state.System.Manager.Desktop.icons.map((i) =>
               i.kind === 'drive' && i.appName === 'Macintosh HD'
                 ? { ...i, label: 'Hard Drive', location: [rightX, 40] as [number, number] }
                 : i
@@ -208,7 +205,7 @@ function DesktopInit() {
 
     // 11.a: Deduplicate icons by appId before adding custom ones
     const seenIds = new Set<string>();
-    const deduped = currentIcons.filter((i: any) => {
+    const deduped = currentIcons.filter((i) => {
       if (seenIds.has(i.appId)) return false;
       seenIds.add(i.appId);
       return true;
@@ -218,7 +215,7 @@ function DesktopInit() {
     // have breathing room. Icons are 48px wide; 100px gives ~52px clearance.
     const rightX = typeof window !== 'undefined' ? window.innerWidth - 100 : 900;
 
-    const hasTrashIcon = deduped.some((i: any) => i.appId === 'trash');
+    const hasTrashIcon = deduped.some((i) => i.appId === 'trash');
     const newIcons = hasTrashIcon
       ? deduped
       : [
