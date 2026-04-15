@@ -52,69 +52,24 @@ function DesktopInit() {
     });
   }, [dispatch]);
 
-  // Build the persistent menu bar items (View items disabled — no Reader window focused at desktop level)
-  const blogMenu = useMemo(
-    () => buildBlogMenu({ dispatch, disableViewItems: true }),
-    [dispatch],
-  );
-
-  // Disable all sounds
+  // Trash icon: ClassicyDesktopIconAdd is a no-op if appId already present — idempotent.
+  // Icon column: 100px from right gives ~52px clearance for the 48px icon.
   useEffect(() => {
-    soundDispatch({
-      type: 'ClassicySoundDisable',
-      disabled: ['*'],
-    });
-  }, [soundDispatch]);
-
-  // Set up desktop icons, system menu, and date/time format
-  useEffect(() => {
-    const openAbout = () => {
-      dispatch({
-        type: 'ClassicyAppOpen',
-        app: {
-          id: ABOUT_THIS_SITE_APP_ID,
-          name: 'About This Site',
-          icon: '',
-        },
-      });
-    };
-
-    const state = useAppManager.getState();
-    const currentIcons = state.System.Manager.Desktop.icons || [];
-
-    // 11.a: Deduplicate icons by appId before adding custom ones
-    const seenIds = new Set<string>();
-    const deduped = currentIcons.filter((i) => {
-      if (seenIds.has(i.appId)) return false;
-      seenIds.add(i.appId);
-      return true;
-    });
-
-    // Icon column: inset from right edge far enough that the icon + label
-    // have breathing room. Icons are 48px wide; 100px gives ~52px clearance.
     const rightX = typeof window !== 'undefined' ? window.innerWidth - 100 : 900;
+    dispatch({
+      type: 'ClassicyDesktopIconAdd',
+      app: { id: 'trash', name: 'Trash', icon: ClassicyIcons.system.desktop.trashFull },
+      label: 'Trash',
+      // Trash icon in bottom-right corner. Icon+label is ~68px tall;
+      // 120px from bottom gives ~52px clearance below the label.
+      location: [rightX, typeof window !== 'undefined' ? window.innerHeight - 120 : 700] as [number, number],
+      kind: 'icon',
+    });
+  }, [dispatch]);
 
-    const hasTrashIcon = deduped.some((i) => i.appId === 'trash');
-    const newIcons = hasTrashIcon
-      ? deduped
-      : [
-          ...deduped,
-          // Trash icon in bottom-right corner. Icon+label is ~68px tall;
-          // 120px from bottom gives ~52px clearance below the label.
-          {
-            appId: 'trash',
-            appName: 'Trash',
-            icon: ClassicyIcons.system.desktop.trashFull,
-            kind: 'icon',
-            label: 'Trash',
-            location: [
-              rightX,
-              typeof window !== 'undefined' ? window.innerHeight - 120 : 700,
-            ] as [number, number],
-          },
-        ];
-
-    useAppManager.setState({
+  // DateAndTime config: no public dispatch exists for this — Classicy gap.
+  useEffect(() => {
+    useAppManager.setState((state) => ({
       System: {
         ...state.System,
         Manager: {
@@ -128,22 +83,62 @@ function DesktopInit() {
             militaryTime: false,
             flashSeparators: false,
           },
+        },
+      },
+    }));
+  }, []);
+
+  // System menu: no public dispatch exists for this — Classicy gap.
+  useEffect(() => {
+    const openAbout = () => {
+      dispatch({
+        type: 'ClassicyAppOpen',
+        app: { id: ABOUT_THIS_SITE_APP_ID, name: 'About This Site', icon: '' },
+      });
+    };
+    useAppManager.setState((state) => ({
+      System: {
+        ...state.System,
+        Manager: {
+          ...state.System.Manager,
           Desktop: {
             ...state.System.Manager.Desktop,
-            icons: newIcons,
-            appMenu: blogMenu, // Set initial menu
-            systemMenu: [
-              {
-                id: 'about-this-site',
-                title: 'About This Site',
-                onClickFunc: openAbout,
-              },
-            ],
+            systemMenu: [{ id: 'about-this-site', title: 'About This Site', onClickFunc: openAbout }],
           },
         },
       },
+    }));
+  }, [dispatch]);
+
+  // Build the persistent menu bar items (View items disabled — no Reader window focused at desktop level)
+  const blogMenu = useMemo(
+    () => buildBlogMenu({ dispatch, disableViewItems: true }),
+    [dispatch],
+  );
+
+  // App menu (initial menu bar state): no public dispatch exists for this — Classicy gap.
+  useEffect(() => {
+    useAppManager.setState((state) => ({
+      System: {
+        ...state.System,
+        Manager: {
+          ...state.System.Manager,
+          Desktop: {
+            ...state.System.Manager.Desktop,
+            appMenu: blogMenu,
+          },
+        },
+      },
+    }));
+  }, [blogMenu]);
+
+  // Disable all sounds
+  useEffect(() => {
+    soundDispatch({
+      type: 'ClassicySoundDisable',
+      disabled: ['*'],
     });
-  }, [dispatch, blogMenu]);
+  }, [soundDispatch]);
 
   return null;
 }
