@@ -1,9 +1,5 @@
 'use client';
 
-if (typeof window !== 'undefined') {
-  localStorage.removeItem('classicyDesktopState');
-}
-
 import {
   ClassicyAppManagerProvider,
   ClassicyDesktop,
