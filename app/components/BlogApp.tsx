@@ -5,12 +5,12 @@ import {
   ClassicyIcons,
   ClassicyWindow,
   useAppManagerDispatch,
-  useAppManager,
 } from 'classicy';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PostBody from './PostBody';
 import { applySort, formatDate, sortedPosts, type SortDir, type SortKey } from '../lib/posts';
 import { buildBlogMenu } from '../lib/menus';
+import { useBlogNavigation } from '../lib/use-blog-navigation';
 
 function ListingsWindow({ onOpenPost }: { onOpenPost: (slug: string) => void }) {
   const [sortKey, setSortKey] = useState<SortKey>('date');
@@ -119,20 +119,6 @@ function ReaderWindow({
 }) {
   const dispatch = useAppManagerDispatch();
   const [zoom, setZoom] = useState<ZoomMode>('normal');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    dispatch({
-      type: 'ClassicyWindowFocus',
-      app: { id: 'blog' },
-      window: { id: `blog.reader.${slug}` },
-    });
-  }, [dispatch, slug, mounted]);
 
   useEffect(() => {
     document.documentElement.dataset.blogZoom = zoom;
@@ -186,19 +172,9 @@ function ReaderWindow({
   );
 }
 
-export default function BlogApp({ initialSlug }: { initialSlug: string }) {
+export default function BlogApp() {
   const dispatch = useAppManagerDispatch();
-  const focusedWindowId = useAppManager((state) => {
-    const windows = state.System.Manager.Applications.apps['blog']?.windows || [];
-    const focusedWindow = windows.find((w) => w.focused);
-    return focusedWindow?.id;
-  });
-  const [openSlugs, setOpenSlugs] = useState<string[]>([]);
-  const openSlugsRef = useRef<string[]>([]);
-
-  useEffect(() => {
-    openSlugsRef.current = openSlugs;
-  }, [openSlugs]);
+  const { openSlugs, openPost, closePost } = useBlogNavigation();
 
   useEffect(() => {
     dispatch({
@@ -206,72 +182,6 @@ export default function BlogApp({ initialSlug }: { initialSlug: string }) {
       app: { id: 'blog', name: 'Blog', icon: '' },
     });
   }, [dispatch]);
-
-  useEffect(() => {
-    if (focusedWindowId === 'blog.listings') {
-      // Use pushState (not replaceState) so we create a proper history entry
-      // when the user focuses listings from a post URL. Skip if already at /.
-      if (window.location.pathname !== '/') {
-        window.history.pushState(null, '', '/');
-      }
-    } else if (typeof focusedWindowId === 'string' && focusedWindowId.startsWith('blog.reader.')) {
-      const slug = focusedWindowId.replace('blog.reader.', '');
-      const newPath = `/posts/${slug}`;
-      if (window.location.pathname !== newPath) {
-        window.history.pushState(null, '', newPath);
-      }
-    }
-  }, [focusedWindowId]);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const path = window.location.pathname;
-      if (path === '/') {
-        dispatch({
-          type: 'ClassicyWindowFocus',
-          app: { id: 'blog' },
-          window: { id: 'blog.listings' },
-        });
-      } else if (path.startsWith('/posts/')) {
-        const slug = path.replace('/posts/', '');
-        if (openSlugsRef.current.includes(slug)) {
-          dispatch({
-            type: 'ClassicyWindowFocus',
-            app: { id: 'blog' },
-            window: { id: `blog.reader.${slug}` },
-          });
-        } else {
-          setOpenSlugs((prev) => [...prev, slug]);
-          // ReaderWindow will self-focus via its mounted effect
-        }
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (initialSlug && openSlugs.length === 0) {
-      setOpenSlugs([initialSlug]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleOpenPost = (slug: string) => {
-    if (openSlugs.includes(slug)) {
-      dispatch({
-        type: 'ClassicyWindowFocus',
-        app: { id: 'blog' },
-        window: { id: `blog.reader.${slug}` },
-      });
-    } else {
-      setOpenSlugs((prev) => [...prev, slug]);
-    }
-  };
-
-  const handleClosePost = (slug: string) => {
-    setOpenSlugs((prev) => prev.filter((s) => s !== slug));
-  };
 
   return (
     <ClassicyApp
@@ -281,13 +191,13 @@ export default function BlogApp({ initialSlug }: { initialSlug: string }) {
       noDesktopIcon
       defaultWindow="blog.listings"
     >
-      <ListingsWindow onOpenPost={handleOpenPost} />
+      <ListingsWindow onOpenPost={openPost} />
       {openSlugs.map((slug, index) => (
         <ReaderWindow
           key={slug}
           slug={slug}
           openIndex={index}
-          onClose={() => handleClosePost(slug)}
+          onClose={() => closePost(slug)}
         />
       ))}
     </ClassicyApp>
