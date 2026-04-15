@@ -9,9 +9,8 @@ import {
 } from 'classicy';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PostBody from './PostBody';
-import { ABOUT_APP_ID } from './AboutWindow';
-import { CONTACT_APP_ID } from './ContactWindow';
 import { applySort, formatDate, sortedPosts, type SortDir, type SortKey } from '../lib/posts';
+import { buildBlogMenu } from '../lib/menus';
 
 function ListingsWindow({ onOpenPost }: { onOpenPost: (slug: string) => void }) {
   const [sortKey, setSortKey] = useState<SortKey>('date');
@@ -109,14 +108,6 @@ function ListingsWindow({ onOpenPost }: { onOpenPost: (slug: string) => void }) 
 
 type ZoomMode = 'normal' | 'full';
 
-type ClassicyMenuItem = {
-  id: string;
-  title?: string;
-  disabled?: boolean;
-  onClickFunc?: () => void;
-  menuChildren?: ClassicyMenuItem[];
-};
-
 function ReaderWindow({
   slug,
   onClose,
@@ -152,108 +143,9 @@ function ReaderWindow({
 
   const selected = sortedPosts.find((p) => p.slug === slug);
 
-  const appMenu = useMemo<ClassicyMenuItem[]>(
-    () => [
-      {
-        id: 'blog.file',
-        title: 'File',
-        menuChildren: [
-          {
-            id: 'blog.file.open',
-            title: 'Open\u2026',
-            onClickFunc: () => {
-              dispatch({
-                type: 'ClassicyWindowOpen',
-                app: { id: 'blog' },
-                window: { id: 'blog.listings' },
-              });
-              dispatch({
-                type: 'ClassicyWindowFocus',
-                app: { id: 'blog' },
-                window: { id: 'blog.listings' },
-              });
-            },
-          },
-        ],
-      },
-      {
-        id: 'blog.edit',
-        title: 'Edit',
-        menuChildren: [
-          {
-            id: 'blog.edit.posts',
-            title: 'Edit Posts',
-            disabled: true,
-          },
-        ],
-      },
-      {
-        id: 'blog.view',
-        title: 'View',
-        menuChildren: [
-          {
-            id: 'blog.view.normal',
-            title: 'Normal',
-            onClickFunc: () => setZoom('normal'),
-          },
-          {
-            id: 'blog.view.full',
-            title: 'Full Width',
-            onClickFunc: () => setZoom('full'),
-          },
-        ],
-      },
-      {
-        id: 'blog.help',
-        title: 'Help',
-        menuChildren: [
-          {
-            id: 'blog.help.about',
-            title: 'About',
-            onClickFunc: () => {
-              dispatch({
-                type: 'ClassicyAppOpen',
-                app: {
-                  id: ABOUT_APP_ID,
-                  name: 'About',
-                  icon: '',
-                },
-              });
-              dispatch({
-                type: 'ClassicyAppFocus',
-                app: { id: ABOUT_APP_ID },
-              });
-            },
-          },
-          {
-            id: 'blog.help.contact',
-            title: 'Contact',
-            onClickFunc: () => {
-              dispatch({
-                type: 'ClassicyAppOpen',
-                app: {
-                  id: CONTACT_APP_ID,
-                  name: 'Contact',
-                  icon: '',
-                },
-              });
-              dispatch({
-                type: 'ClassicyAppFocus',
-                app: { id: CONTACT_APP_ID },
-              });
-            },
-          },
-          {
-            id: 'blog.help.help-me',
-            title: 'Help me\u2026',
-            onClickFunc: () => {
-              window.open('https://www.google.com', '_blank');
-            },
-          },
-        ],
-      },
-    ],
-    [dispatch],
+  const appMenu = useMemo(
+    () => buildBlogMenu({ dispatch, setZoom, disableViewItems: false }),
+    [dispatch, setZoom],
   );
 
   return (
