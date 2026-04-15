@@ -1,11 +1,29 @@
 'use client';
 
-import { ClassicyApp, ClassicyWindow, ClassicyIcons } from 'classicy';
+import { useEffect } from 'react';
+import { ClassicyApp, ClassicyWindow, ClassicyIcons, useAppManager, useAppManagerDispatch } from 'classicy';
 
 export const TRASH_APP_ID = 'trash';
 export const TRASH_WINDOW_ID = 'trash.main';
 
 export default function TrashWindow() {
+  const dispatch = useAppManagerDispatch();
+  const isOpen = useAppManager(
+    (state) => state.System.Manager.Applications.apps?.[TRASH_APP_ID]?.open ?? false,
+  );
+
+  // Classicy's built-in desktop icon handler fires ClassicyAppOpen but doesn't
+  // guarantee focus when another window is already on top. Re-dispatch focus
+  // whenever the trash app transitions to open.
+  useEffect(() => {
+    if (!isOpen) return;
+    dispatch({
+      type: 'ClassicyWindowFocus',
+      app: { id: TRASH_APP_ID },
+      window: { id: TRASH_WINDOW_ID },
+    });
+  }, [isOpen, dispatch]);
+
   return (
     <ClassicyApp
       id={TRASH_APP_ID}
