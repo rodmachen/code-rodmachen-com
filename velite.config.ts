@@ -12,14 +12,15 @@ export default defineConfig({
     clean: true,
   },
   markdown: {
-    // `unified` is installed twice in node_modules (direct dep of
-    // @shikijs/rehype, transitive of velite via @mdx-js/mdx). Their
-    // Plugin<...> types come from different resolved paths and TS treats
-    // them as structurally distinct even at the same version. Runtime
-    // behavior is correct; the cast below silences the spurious mismatch.
     rehypePlugins: [
       [
-        rehypeShiki as any,
+        // @ts-expect-error -- velite bundles unified types inline in its .d.ts,
+        // renaming Settings→Settings$2. @shikijs/rehype imports Plugin<...> from
+        // the unified package directly, so TypeScript sees structurally distinct
+        // Processor types in the 'this' context. Both resolve to unified@11.0.5
+        // at runtime; only TS sees a mismatch. @ts-expect-error (not @ts-ignore)
+        // so this line becomes an error if velite ever fixes its type bundling.
+        rehypeShiki,
         {
           theme: 'github-light',
           transformers: [transformerNotationDiff()],
