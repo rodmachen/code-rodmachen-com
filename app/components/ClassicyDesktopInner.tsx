@@ -139,16 +139,12 @@ function DesktopInit() {
   return null;
 }
 
-export default function ClassicyDesktopInner({
-  initialSlug,
-}: {
-  initialSlug: string;
-}) {
+export default function ClassicyDesktopInner() {
   return (
     <ClassicyAppManagerProvider appName="code.rodmachen.com">
       <ClassicyDesktop>
         <DesktopInit />
-        <BlogApp initialSlug={initialSlug} />
+        <BlogApp />
         <AboutThisSiteWindow />
         <AboutWindow />
         <ContactWindow />

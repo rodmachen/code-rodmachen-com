@@ -17,5 +17,5 @@ export default async function PostPage({
   const { slug } = await params;
   const found = (posts as Post[]).find((p) => p.slug === slug);
   if (!found) notFound();
-  return <ClassicyShell initialSlug={slug} />;
+  return <ClassicyShell />;
 }
