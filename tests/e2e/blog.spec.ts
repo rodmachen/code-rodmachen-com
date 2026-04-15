@@ -85,6 +85,90 @@ test('reader window position persists across reloads', async ({ page }) => {
   expect(Math.abs(reloadedBox.x - draggedBox.x)).toBeLessThan(10);
 });
 
+// URL contract and persistence tests (Step 12)
+
+test('URL contract: / shows listings window focused', async ({ page }) => {
+  await page.goto('/');
+  // Classicy marks the focused window with classicyWindowActive class.
+  const activeListings = page.locator(
+    '#blog_blog\\.listings.classicyWindowActive',
+  );
+  await expect(activeListings).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/');
+});
+
+test('URL contract: /posts/<slug> shows that post window focused', async ({
+  page,
+}) => {
+  await page.goto('/posts/typography-test');
+  const activeReader = page.locator(
+    '#blog_blog\\.reader\\.typography-test.classicyWindowActive',
+  );
+  await expect(activeReader).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/posts/typography-test');
+});
+
+test('clicking a post updates URL and focuses reader; back button returns to listings', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByTestId('post-listing-hello-classicy')).toBeVisible();
+
+  // Click the post row.
+  await page.getByTestId('post-listing-hello-classicy').click();
+
+  // URL should change to /posts/hello-classicy and reader window should be focused.
+  await expect(page).toHaveURL('/posts/hello-classicy');
+  await expect(
+    page.locator('#blog_blog\\.reader\\.hello-classicy.classicyWindowActive'),
+  ).toBeVisible();
+
+  // Browser back button.
+  await page.goBack();
+  // Wait for Next.js SPA navigation to settle and hook to dispatch focus.
+  await page.waitForURL('/');
+
+  // Listings should regain focus.
+  await expect(
+    page.locator('#blog_blog\\.listings.classicyWindowActive'),
+  ).toBeVisible();
+});
+
+test('reload on post URL focuses post window while preserving dragged positions', async ({
+  page,
+}) => {
+  // Navigate to a post.
+  await page.goto('/posts/hello-classicy');
+  const readerWindow = page.locator(
+    '#blog_blog\\.reader\\.hello-classicy',
+  );
+  await expect(readerWindow).toBeVisible();
+
+  // Drag the reader window.
+  const box = await readerWindow.boundingBox();
+  if (!box) throw new Error('no bounding box');
+  await page.mouse.move(box.x + box.width / 2, box.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 80, box.y + 10, { steps: 8 });
+  await page.mouse.up();
+  const draggedBox = await readerWindow.boundingBox();
+  if (!draggedBox) throw new Error('no bounding box after drag');
+
+  // Wait for Classicy persistence debounce (500ms), then reload.
+  await page.waitForTimeout(800);
+  await page.reload();
+
+  // After reload: post window focused (URL contract respected).
+  await expect(
+    page.locator('#blog_blog\\.reader\\.hello-classicy.classicyWindowActive'),
+  ).toBeVisible();
+
+  // Position preserved (persistence working).
+  const reloadedBox = await readerWindow.boundingBox();
+  if (!reloadedBox) throw new Error('no bounding box after reload');
+  expect(Math.abs(reloadedBox.x - draggedBox.x)).toBeLessThan(10);
+});
+
 test('customizations reapply cleanly after localStorage is cleared', async ({
   page,
 }) => {

@@ -267,7 +267,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 12 — Update e2e tests for URL contract + persistence
+### Step 12 — Update e2e tests for URL contract + persistence ✅
 
 **Files to modify:**
 - `tests/e2e/blog.spec.ts` — add explicit assertions for the URL contract:
