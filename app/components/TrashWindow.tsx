@@ -65,7 +65,6 @@ export default function TrashWindow() {
               style={{ imageRendering: 'auto' }}
             />
           </a>
-          <span style={{ fontSize: '11px' }}>University of Texas</span>
         </div>
       </ClassicyWindow>
     </ClassicyApp>
