@@ -40,11 +40,11 @@ export default function TrashWindow() {
           <a href="https://www.utexas.edu/" target="_blank" rel="noreferrer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Texas_Longhorns_logo.svg/200px-Texas_Longhorns_logo.svg.png"
+              src="/assets/img/tu-logo.jpg"
               alt="University of Texas Longhorns"
-              width={80}
-              height={80}
-              style={{ imageRendering: 'pixelated' }}
+              width={96}
+              height={96}
+              style={{ imageRendering: 'auto' }}
             />
           </a>
           <span style={{ fontSize: '11px' }}>University of Texas</span>
