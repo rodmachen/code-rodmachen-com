@@ -1,0 +1,284 @@
+---
+import '../styles/global.css';
+import '../styles/classic.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = "code.rodmachen.com", description = "Tech and code writing by Rod Machen" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="bg-os8-bondi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="/img/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    
+    <!-- Open Graph / Twitter meta tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <style>
+      /* Menu Bar */
+      .classic-menu-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 24px;
+        background-color: white;
+        border-bottom: 1px solid black;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 16px;
+        font-family: 'ChicagoFLF', sans-serif;
+        font-size: 14px;
+        z-index: 100;
+      }
+      .menu-items {
+        display: flex;
+        gap: 16px;
+      }
+      .menu-item {
+        cursor: default;
+        padding: 0 6px;
+        color: black;
+        text-decoration: none;
+      }
+      .menu-item.active, .menu-item:hover, .apple-logo:hover {
+        background-color: black;
+        color: white;
+      }
+      .apple-logo {
+        cursor: default;
+        padding: 0 6px;
+        font-size: 16px;
+      }
+      .menu-clock {
+        cursor: default;
+      }
+
+      /* Desktop Icons */
+      .desktop-icons {
+        position: fixed;
+        top: 40px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        z-index: 50;
+      }
+      
+      /* Window Controls Usability & Fixes */
+      .control-box {
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .zoom-box-inner, .windowshade-box-inner {
+        margin: auto;
+      }
+      .desktop-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: white;
+        font-family: 'Geneva', sans-serif;
+        font-size: 12px;
+        text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; /* Outline effect to read on backgrounds */
+        width: 60px;
+        text-align: center;
+      }
+      .desktop-icon:hover {
+        color: #ffff00; /* Classic selection yellow/highlight */
+      }
+      .desktop-icon svg {
+        margin-bottom: 4px;
+        filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.5));
+      }
+
+      /* Override classic.css defaults to make it fit a modern blog */
+      div.classic-window {
+        width: 95%;
+        max-width: 1000px;
+        margin: 64px auto 40px auto; /* 24px for menu bar + 40px top gap, 40px bottom gap */
+        /* Inner scrolling updates */
+        height: calc(100vh - 104px);
+        display: flex;
+        flex-direction: column;
+        /* Use the font for the window frame but let global handle content */
+        font-family: 'ChicagoFLF', sans-serif;
+        transition: all 0.2s ease;
+      }
+
+      div.classic-window.maximized {
+        width: 100%;
+        max-width: none;
+        height: calc(100vh - 24px);
+        margin: 24px 0 0 0;
+      }
+
+      div.classic-window.shaded {
+        height: auto;
+      }
+      
+      div.window-pane {
+        background-color: var(--bg);
+        padding: 2rem;
+        font-family: var(--font-sans); /* Use modern font for readability */
+        font-size: 1.1rem; /* Better base size than the 12px from classic.css */
+        color: var(--text);
+        /* Make the inner pane the scrolling element */
+        flex: 1;
+        overflow-y: auto;
+        /* Firefox fallback */
+        scrollbar-width: auto;
+        scrollbar-color: #eeeeee #cccccc;
+      }
+      
+      /* Reset some of classic.css aggressive overrides that hurt readability */
+      .window-pane h1, .window-pane h2, .window-pane h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: normal; /* Chicago shouldn't be bolded artificially */
+      }
+
+      /* Custom Platinum Scrollbars for the Window Pane */
+      div.window-pane::-webkit-scrollbar {
+        width: 16px;
+        background-color: #cccccc;
+        border-left: 1px solid #000000;
+      }
+      div.window-pane::-webkit-scrollbar-thumb {
+        background-color: #eeeeee;
+        border: 1px solid #000000;
+        box-shadow: inset 1px 1px 0px #ffffff, inset -1px -1px 0px #aaaaaa;
+      }
+      div.window-pane::-webkit-scrollbar-thumb:active {
+        background-color: #cccccc;
+        box-shadow: inset 1px 1px 0px #aaaaaa, inset -1px -1px 0px #ffffff;
+      }
+      div.window-pane::-webkit-scrollbar-button:single-button:vertical:decrement {
+        height: 16px;
+        width: 16px;
+        background-color: #eeeeee;
+        border: 1px solid #000000;
+        box-shadow: inset 1px 1px 0px #ffffff, inset -1px -1px 0px #aaaaaa;
+        /* Basic upward triangle using background-image */
+        background-image: linear-gradient(to right, transparent 7px, black 7px, black 9px, transparent 9px), linear-gradient(to top, black 50%, transparent 50%);
+        background-size: 16px 16px;
+      }
+      div.window-pane::-webkit-scrollbar-button:single-button:vertical:increment {
+        height: 16px;
+        width: 16px;
+        background-color: #eeeeee;
+        border: 1px solid #000000;
+        box-shadow: inset 1px 1px 0px #ffffff, inset -1px -1px 0px #aaaaaa;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Classic Mac OS Menu Bar -->
+    <nav class="classic-menu-bar" aria-label="Main Navigation">
+      <div class="menu-items">
+        <span class="apple-logo" aria-label="Apple Menu" role="img"></span>
+        <a href="/" class="menu-item active">File</a>
+        <span class="menu-item" aria-hidden="true">Edit</span>
+        <span class="menu-item" aria-hidden="true">View</span>
+        <span class="menu-item" aria-hidden="true">Special</span>
+        <span class="menu-item" aria-hidden="true">Help</span>
+      </div>
+      <div class="menu-clock" id="menu-clock" aria-hidden="true">12:00 PM</div>
+    </nav>
+
+    <!-- Desktop Icons (Top Right) -->
+    <div class="desktop-icons">
+      <a href="/about" class="desktop-icon">
+        <svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4h14l10 10v14H4V4z" fill="#fff" stroke="#000" stroke-width="2"/>
+          <path d="M18 4v10h10" fill="none" stroke="#000" stroke-width="2"/>
+          <path d="M8 12h8M8 16h12M8 20h12M8 24h8" stroke="#000" stroke-width="2"/>
+        </svg>
+        <span>About</span>
+      </a>
+      <a href="/contact" class="desktop-icon">
+        <svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4h14l10 10v14H4V4z" fill="#fff" stroke="#000" stroke-width="2"/>
+          <path d="M18 4v10h10" fill="none" stroke="#000" stroke-width="2"/>
+          <path d="M8 12h8M8 16h12M8 20h12M8 24h8" stroke="#000" stroke-width="2"/>
+        </svg>
+        <span>Contact</span>
+      </a>
+    </div>
+
+    <div class="content classic-window" id="main-window">
+      <h1 class="title">code.rodmachen.com</h1>
+      
+      <!-- Classic OS window controls -->
+      <button class="control-box close-box" onclick="window.location='/'" aria-label="Close window"><div class="control-box-inner" aria-hidden="true"></div></button>
+      <button class="control-box zoom-box" id="btn-zoom" aria-label="Zoom window"><div class="control-box-inner" aria-hidden="true"><div class="zoom-box-inner"></div></div></button>
+      <button class="control-box windowshade-box" id="btn-shade" aria-label="Collapse window"><div class="control-box-inner" aria-hidden="true"><div class="windowshade-box-inner"></div></div></button>
+      
+      <div class="inner window-pane" id="window-pane">
+        <main>
+          <slot />
+        </main>
+        
+        <footer>
+          <p>
+            &copy; {new Date().getFullYear()} Rod Machen. 
+            Part of <a href="https://rodmachen.com">rodmachen.com</a> | 
+            <a href="https://edition.rodmachen.com">edition</a> | 
+            <a href="https://photo.rodmachen.com">photo</a>
+          </p>
+        </footer>
+      </div>
+    </div>
+
+    <script is:inline>
+      // Window interaction logic
+      const win = document.getElementById('main-window');
+      const pane = document.getElementById('window-pane');
+      const btnZoom = document.getElementById('btn-zoom');
+      const btnShade = document.getElementById('btn-shade');
+
+      if (win && pane && btnZoom && btnShade) {
+        btnZoom.addEventListener('click', () => {
+          win.classList.toggle('maximized');
+        });
+
+        btnShade.addEventListener('click', () => {
+          win.classList.toggle('shaded');
+          pane.style.display = win.classList.contains('shaded') ? 'none' : 'block';
+        });
+      }
+
+      // Simple clock for the menu bar
+      function updateClock() {
+        const clock = document.getElementById('menu-clock');
+        if (clock) {
+          const now = new Date();
+          clock.innerText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+    </script>
+  </body>
+</html>

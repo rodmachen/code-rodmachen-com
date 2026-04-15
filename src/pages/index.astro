@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// In Phase 1 we mock the posts list
+const posts = [
+  {
+    title: "Building the Next Generation of code.rodmachen.com",
+    slug: "sample-post",
+    date: new Date('2026-04-08'),
+    tags: ["astro", "vercel", "architecture"],
+    subTitle: "A deep dive into why I chose Astro and Vercel for my code blog."
+  },
+  {
+    title: "Code Template",
+    slug: "code-template",
+    date: new Date('2026-04-09'),
+    tags: ["template", "astro"],
+    subTitle: "A template for future code posts."
+  }
+];
+---
+
+<BaseLayout>
+  <div class="home-intro">
+    <h1>Engineering &amp; Code</h1>
+    <p>Technical writing, architecture discussions, and coding experiments by Rod Machen.</p>
+  </div>
+  
+  <div class="post-list">
+    {posts.map(post => (
+      <article class="post-item">
+        <h2>
+          <a href={`/${post.slug}/`}>{post.title}</a>
+        </h2>
+        <div class="post-meta">
+          <time datetime={post.date.toISOString()}>
+            {post.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </time>
+          {post.tags.length > 0 && (
+            <span class="tags">
+              {post.tags.map(tag => `#${tag} `)}
+            </span>
+          )}
+        </div>
+        {post.subTitle && <p class="post-description">{post.subTitle}</p>}
+      </article>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .home-intro {
+    margin-bottom: 3rem;
+  }
+  
+  .home-intro h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .home-intro p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 600px;
+  }
+  
+  .post-item {
+    margin-bottom: 2.5rem;
+  }
+  
+  .post-item h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+  }
+  
+  .post-meta {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  
+  .tags {
+    margin-left: 0.5rem;
+    color: var(--accent);
+  }
+  
+  .post-description {
+    margin-top: 0.5rem;
+    color: var(--text);
+  }
+</style>
