@@ -8,54 +8,19 @@ import {
   useAppManager,
 } from 'classicy';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { posts as rawPosts } from '../../.velite';
 import PostBody from './PostBody';
 import { ABOUT_APP_ID } from './AboutWindow';
 import { CONTACT_APP_ID } from './ContactWindow';
-
-type Post = {
-  title: string;
-  subTitle?: string;
-  date: string;
-  tags: string[];
-  slug: string;
-  body: string;
-  permalink: string;
-};
-
-const posts = (rawPosts as Post[])
-  .slice()
-  .sort((a, b) => b.date.localeCompare(a.date));
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-type SortKey = 'name' | 'date';
-type SortDir = 'asc' | 'desc';
+import { applySort, formatDate, sortedPosts, type SortDir, type SortKey } from '../lib/posts';
 
 function ListingsWindow({ onOpenPost }: { onOpenPost: (slug: string) => void }) {
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const sorted = useMemo(() => {
-    const list = [...posts];
-    const dir = sortDir === 'asc' ? 1 : -1;
-    switch (sortKey) {
-      case 'name':
-        list.sort((a, b) => dir * a.title.localeCompare(b.title));
-        break;
-      case 'date':
-        list.sort((a, b) => dir * a.date.localeCompare(b.date));
-        break;
-    }
-    return list;
-  }, [sortKey, sortDir]);
+  const sorted = useMemo(
+    () => applySort(sortedPosts, sortKey, sortDir),
+    [sortKey, sortDir],
+  );
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -135,7 +100,7 @@ function ListingsWindow({ onOpenPost }: { onOpenPost: (slug: string) => void }) 
           </table>
         </div>
         <div className="postListingsStatusBar">
-          {posts.length} item{posts.length !== 1 ? 's' : ''}
+          {sortedPosts.length} item{sortedPosts.length !== 1 ? 's' : ''}
         </div>
       </div>
     </ClassicyWindow>
@@ -185,7 +150,7 @@ function ReaderWindow({
     };
   }, [zoom]);
 
-  const selected = posts.find((p) => p.slug === slug);
+  const selected = sortedPosts.find((p) => p.slug === slug);
 
   const appMenu = useMemo<ClassicyMenuItem[]>(
     () => [
