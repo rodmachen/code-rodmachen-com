@@ -13,6 +13,13 @@ function collectConsoleErrors(page: Page): string[] {
   return errors;
 }
 
+test('desktop shows Hard Drive icon near top-right', async ({ page }) => {
+  await page.goto('/');
+  // Find the desktop icon whose label is "Hard Drive"
+  const hardDriveLabel = page.locator('.classicyDesktopIcon p', { hasText: 'Hard Drive' });
+  await expect(hardDriveLabel).toBeVisible();
+});
+
 test('home page renders post listings window', async ({ page }) => {
   const errors = collectConsoleErrors(page);
   await page.goto('/');

@@ -26,40 +26,31 @@ function DesktopInit() {
   const dispatch = useAppManagerDispatch();
   const soundDispatch = useSoundDispatch();
 
-  // Watch for Classicy's auto-created "Macintosh HD" drive icon and fix it up.
-  // Classicy's internal Finder component dispatches ClassicyDesktopIconAdd for
-  // every virtual drive on mount (useEffect), so the timing vs. our own useEffect
-  // is non-deterministic. This reactive selector re-fires whenever the icon
-  // appears, regardless of which effect wins the race.
-  const needsHardDriveFix = useAppManager((state) =>
-    state.System.Manager.Desktop.icons.some(
-      (i) => i.kind === 'drive' && i.appName === 'Macintosh HD' && i.label !== 'Hard Drive'
-    )
-  );
-
+  // Set Hard Drive icon via public dispatch. ClassicyDesktopIconAdd is a no-op
+  // if an icon with the same appId already exists, so this wins either race:
+  // — we run before Finder: Add "Hard Drive" first, Finder's "Macintosh HD"
+  //   add is blocked (same appId).
+  // — Finder runs before us: Remove "Macintosh HD", then Add "Hard Drive".
+  // Idempotent: re-running removes nothing (no "Macintosh HD" present) and
+  // the Add is a no-op (appId already occupied by "Hard Drive").
   useEffect(() => {
-    if (!needsHardDriveFix) return;
-    // Match the same rightX used for Trash. Hard Drive sits at the top of the
-    // icon column; 40px from top clears the 22px menu bar with comfortable padding.
     const rightX = typeof window !== 'undefined' ? window.innerWidth - 100 : 900;
-    const state = useAppManager.getState();
-    useAppManager.setState({
-      System: {
-        ...state.System,
-        Manager: {
-          ...state.System.Manager,
-          Desktop: {
-            ...state.System.Manager.Desktop,
-            icons: state.System.Manager.Desktop.icons.map((i) =>
-              i.kind === 'drive' && i.appName === 'Macintosh HD'
-                ? { ...i, label: 'Hard Drive', location: [rightX, 40] as [number, number] }
-                : i
-            ),
-          },
-        },
-      },
+    dispatch({
+      type: 'ClassicyDesktopIconRemove',
+      app: { id: 'Finder.app', name: 'Macintosh HD' },
     });
-  }, [needsHardDriveFix]);
+    dispatch({
+      type: 'ClassicyDesktopIconAdd',
+      app: {
+        id: 'Finder.app',
+        name: 'Hard Drive',
+        icon: ClassicyIcons.system.drives.disk,
+      },
+      label: 'Hard Drive',
+      location: [rightX, 40] as [number, number],
+      kind: 'drive',
+    });
+  }, [dispatch]);
 
   // Build the persistent menu bar items (View items disabled — no Reader window focused at desktop level)
   const blogMenu = useMemo(
