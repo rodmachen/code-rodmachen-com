@@ -69,6 +69,11 @@ No `category` or `template` field needed — all posts are implicitly "code/tech
 - Google Analytics
 - Cross-site footer links (to rodmachen.com, edition, photo)
 
+**Phase 1.5 follow-ups (deferred from PR #5 review):**
+- Move `ClassicyAppOpen` dispatch into `useBlogNavigation` to remove the load-bearing effect-declaration-order in `BlogApp.tsx` (currently documented with a WHY comment, but a future refactor could silently break the focus race fix).
+- Harden `pathToSlug` against URL-encoded slugs (`decodeURIComponent`) once any post slug contains chars that percent-encode. Today all slugs are simple kebab-case, so not blocking — but add a test pinning current behavior when this changes.
+- Replace hardcoded `waitForTimeout(800)` in e2e persistence tests with polling (`expect.poll`) so a change in Classicy's 500ms persist debounce won't silently lose coverage.
+
 **Cross-site navigation:**
 - Footer should link to rodmachen.com and sibling subdomains
 - Header has a small "Rod Machen" link back to rodmachen.com
