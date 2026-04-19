@@ -103,6 +103,9 @@ function DesktopInit() {
         app: { id: TOPICS_APP_ID },
       });
     };
+    const openExternal = (url: string) => () => {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
     useAppManager.setState((state) => ({
       System: {
         ...state.System,
@@ -113,6 +116,9 @@ function DesktopInit() {
             systemMenu: [
               { id: 'about-this-site', title: 'About This Site', onClickFunc: openAbout },
               { id: 'topics', title: 'Topics', onClickFunc: openTopics },
+              { id: 'ext-rodmachen', title: 'rodmachen.com | Home', onClickFunc: openExternal('https://rodmachen.com') },
+              { id: 'ext-edition', title: 'Edition | Writing', onClickFunc: openExternal('https://edition.rodmachen.com') },
+              { id: 'ext-photo', title: 'Photo | Portfolio', onClickFunc: openExternal('https://photo.rodmachen.com') },
             ],
           },
         },

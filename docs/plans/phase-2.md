@@ -169,7 +169,7 @@ Topics surface in two places: a Classicy "Topics" app window (menu-accessible), 
 
 ---
 
-## Step 6 — Apple menu cross-site navigation
+## Step 6 — Apple menu cross-site navigation ✅
 
 Append sibling-site entries to the Classicy system menu so the desktop has a native equivalent of the cross-site footer in the brief.
 
