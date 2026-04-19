@@ -34,6 +34,16 @@ export function useBlogNavigation(): BlogNavigation {
     setOpenSlugs((prev) => reconcileOpenSlugs(prev, desiredSlug));
   }
 
+  // Open the app when visiting a post URL directly. Must run before
+  // the focus effect so iP()'s focus-clear happens before we set focus.
+  useEffect(() => {
+    if (!desiredSlug) return;
+    dispatch({
+      type: 'ClassicyAppOpen',
+      app: { id: 'blog', name: 'Blog', icon: '' },
+    });
+  }, [desiredSlug, dispatch]);
+
   // Focus dispatch is a genuine side effect — stays in useEffect.
   useEffect(() => {
     dispatch(focusAction(desiredSlug));

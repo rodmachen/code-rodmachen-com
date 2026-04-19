@@ -23,8 +23,12 @@ export function buildBlogMenu({
       menuChildren: [
         {
           id: 'blog.file.open',
-          title: 'Open\u2026',
+          title: 'Open Posts',
           onClickFunc: () => {
+            dispatch({
+              type: 'ClassicyAppOpen',
+              app: { id: 'blog', name: 'Blog', icon: '' },
+            });
             dispatch({
               type: 'ClassicyWindowOpen',
               app: { id: 'blog' },
