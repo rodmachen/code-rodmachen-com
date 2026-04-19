@@ -193,7 +193,7 @@ Append sibling-site entries to the Classicy system menu so the desktop has a nat
 
 ---
 
-## Step 7 — Google Analytics + production deploy
+## Step 7 — Google Analytics + production deploy ✅
 
 Wrap up with analytics and the actual Vercel deployment.
 
