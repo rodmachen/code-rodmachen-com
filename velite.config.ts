@@ -1,6 +1,7 @@
 import { defineConfig, s } from 'velite';
 import rehypeShiki from '@shikijs/rehype';
 import { transformerNotationDiff } from '@shikijs/transformers';
+import remarkCloudinaryImages from './app/plugins/remark-cloudinary-images';
 
 export default defineConfig({
   root: 'content',
@@ -12,6 +13,7 @@ export default defineConfig({
     clean: true,
   },
   markdown: {
+    remarkPlugins: [remarkCloudinaryImages],
     rehypePlugins: [
       [
         // @ts-expect-error -- velite bundles unified types inline in its .d.ts,
@@ -36,6 +38,7 @@ export default defineConfig({
         .object({
           title: s.string(),
           subTitle: s.string().optional(),
+          thumbnail: s.string().optional(),
           date: s.isodate(),
           published: s.boolean().default(true),
           tags: s.array(s.string()).default([]),

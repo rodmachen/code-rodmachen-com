@@ -93,6 +93,31 @@
   text-decoration: underline;
 }
 
+/* Responsive figure images from remark-cloudinary-images */
+.postBody :global(figure[class^="img-"]) {
+  margin: 1.5em auto;
+  text-align: center;
+}
+
+.postBody :global(figure.img-small)  { max-width: 300px; }
+.postBody :global(figure.img-medium) { max-width: 600px; }
+.postBody :global(figure.img-large)  { max-width: 800px; }
+.postBody :global(figure.img-full)   { max-width: 100%; }
+
+.postBody :global(figure[class^="img-"] img) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.postBody :global(figure[class^="img-"] figcaption) {
+  margin-top: 0.4em;
+  font-size: 0.85em;
+  color: #666;
+  font-style: italic;
+}
+
 /*
  * ChicagoFLF is declared by Classicy itself in classicy/dist/classicy.css
  * as an inline base64 WOFF2 @font-face. app/layout.tsx already imports
