@@ -105,7 +105,7 @@ test('URL contract: /posts/<slug> shows that post window focused', async ({
     '#blog_blog\\.reader\\.typography-test.classicyWindowActive',
   );
   await expect(activeReader).toBeVisible();
-  expect(new URL(page.url()).pathname).toBe('/posts/typography-test');
+  expect(new URL(page.url()).pathname).toBe('/posts/typography-test/');
 });
 
 test('clicking a post updates URL and focuses reader; back button returns to listings', async ({
@@ -118,7 +118,7 @@ test('clicking a post updates URL and focuses reader; back button returns to lis
   await page.getByTestId('post-listing-hello-classicy').click();
 
   // URL should change to /posts/hello-classicy and reader window should be focused.
-  await expect(page).toHaveURL('/posts/hello-classicy');
+  await expect(page).toHaveURL('/posts/hello-classicy/');
   await expect(
     page.locator('#blog_blog\\.reader\\.hello-classicy.classicyWindowActive'),
   ).toBeVisible();
