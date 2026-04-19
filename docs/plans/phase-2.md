@@ -125,7 +125,7 @@ Topics surface in two places: a Classicy "Topics" app window (menu-accessible), 
 
 ---
 
-## Step 4 — Feeds & discoverability (RSS + sitemap + robots)
+## Step 4 — Feeds & discoverability (RSS + sitemap + robots) ✅
 
 - `app/rss.xml/route.ts`: Next 16 static route handler (`export const dynamic = 'force-static'`) that returns an RSS 2.0 XML string built from `publishedPosts()`. Port the item shape from `edition-rodmachen-com/src/pages/rss.xml.ts`: title, link (`https://code.rodmachen.com/posts/${slug}/`), pubDate, description (use `subTitle` if present else empty). Channel title "code – Rod Machen".
 - `app/sitemap.ts`: Next 16 built-in sitemap generator. Emit `/`, `/topics/`, each `/topics/[tag]/`, and each `/posts/[slug]/`.
