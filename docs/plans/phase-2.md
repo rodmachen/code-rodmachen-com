@@ -66,7 +66,7 @@ Switch Next.js to static export and add a `published` field so unpublished draft
 
 ---
 
-## Step 2 — Cloudinary responsive images via remark plugin
+## Step 2 — Cloudinary responsive images via remark plugin ✅
 
 Port the remark plugin from `edition-rodmachen-com` so markdown images resolve to responsive `<figure>` with srcset. Add `thumbnail` to the schema for homepage/listing cards.
 
