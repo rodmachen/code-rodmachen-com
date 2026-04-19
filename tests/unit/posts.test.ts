@@ -1,10 +1,16 @@
 import { describe, test, expect } from 'vitest';
-import { applySort, formatDate, sortedPosts, type Post } from '../../app/lib/posts';
+import { applySort, filterPublished, formatDate, sortedPosts, type Post } from '../../app/lib/posts';
 
 const samplePosts: Post[] = [
-  { title: 'Zebra Post', subTitle: '', date: '2024-01-15', tags: [], slug: 'zebra', body: '', permalink: '/posts/zebra' },
-  { title: 'Apple Post', subTitle: '', date: '2023-06-01', tags: [], slug: 'apple', body: '', permalink: '/posts/apple' },
-  { title: 'Mango Post', subTitle: '', date: '2024-03-20', tags: [], slug: 'mango', body: '', permalink: '/posts/mango' },
+  { title: 'Zebra Post', subTitle: '', date: '2024-01-15', published: true, tags: [], slug: 'zebra', body: '', permalink: '/posts/zebra' },
+  { title: 'Apple Post', subTitle: '', date: '2023-06-01', published: true, tags: [], slug: 'apple', body: '', permalink: '/posts/apple' },
+  { title: 'Mango Post', subTitle: '', date: '2024-03-20', published: true, tags: [], slug: 'mango', body: '', permalink: '/posts/mango' },
+];
+
+const mixedPosts: Post[] = [
+  { title: 'Published A', subTitle: '', date: '2024-01-01', published: true, tags: [], slug: 'pub-a', body: '', permalink: '/posts/pub-a' },
+  { title: 'Draft B', subTitle: '', date: '2024-01-02', published: false, tags: [], slug: 'draft-b', body: '', permalink: '/posts/draft-b' },
+  { title: 'Published C', subTitle: '', date: '2024-01-03', published: true, tags: [], slug: 'pub-c', body: '', permalink: '/posts/pub-c' },
 ];
 
 describe('formatDate', () => {
@@ -50,5 +56,44 @@ describe('sortedPosts', () => {
     for (let i = 0; i < sortedPosts.length - 1; i++) {
       expect(sortedPosts[i].date >= sortedPosts[i + 1].date).toBe(true);
     }
+  });
+});
+
+describe('filterPublished', () => {
+  const prod = { NODE_ENV: 'production' };
+  const dev = { NODE_ENV: 'development' };
+  const devNoDrafts = { NODE_ENV: 'development', SHOW_DRAFTS: 'false' };
+
+  test('empty list → empty result', () => {
+    expect(filterPublished([], prod)).toEqual([]);
+  });
+
+  test('all published in production → returns all', () => {
+    expect(filterPublished(samplePosts, prod)).toHaveLength(3);
+  });
+
+  test('mixed in production → returns only published', () => {
+    const result = filterPublished(mixedPosts, prod);
+    expect(result.map((p) => p.slug)).toEqual(['pub-a', 'pub-c']);
+  });
+
+  test('all drafts in production → returns empty', () => {
+    const allDrafts = mixedPosts.map((p) => ({ ...p, published: false }));
+    expect(filterPublished(allDrafts, prod)).toHaveLength(0);
+  });
+
+  test('mixed in dev (no SHOW_DRAFTS) → returns all including drafts', () => {
+    const result = filterPublished(mixedPosts, dev);
+    expect(result).toHaveLength(3);
+  });
+
+  test('mixed in dev with SHOW_DRAFTS=false → filters drafts', () => {
+    const result = filterPublished(mixedPosts, devNoDrafts);
+    expect(result.map((p) => p.slug)).toEqual(['pub-a', 'pub-c']);
+  });
+
+  test('no NODE_ENV (test runner env) → filters drafts', () => {
+    const result = filterPublished(mixedPosts, {});
+    expect(result.map((p) => p.slug)).toEqual(['pub-a', 'pub-c']);
   });
 });

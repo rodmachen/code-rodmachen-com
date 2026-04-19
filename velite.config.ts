@@ -37,6 +37,7 @@ export default defineConfig({
           title: s.string(),
           subTitle: s.string().optional(),
           date: s.isodate(),
+          published: s.boolean().default(true),
           tags: s.array(s.string()).default([]),
           slug: s.slug('posts'),
           body: s.markdown(),

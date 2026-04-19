@@ -32,4 +32,18 @@ export function applySort(list: Post[], key: SortKey, dir: SortDir): Post[] {
   return sorted;
 }
 
-export const sortedPosts: Post[] = applySort(rawPosts, 'date', 'desc');
+export function filterPublished(
+  posts: Post[],
+  env: { NODE_ENV?: string; SHOW_DRAFTS?: string } = process.env
+): Post[] {
+  const isDev = env.NODE_ENV === 'development';
+  const showDrafts = env.SHOW_DRAFTS !== 'false';
+  if (isDev && showDrafts) return posts;
+  return posts.filter((p) => p.published !== false);
+}
+
+export function publishedPosts(): Post[] {
+  return filterPublished(rawPosts);
+}
+
+export const sortedPosts: Post[] = applySort(publishedPosts(), 'date', 'desc');

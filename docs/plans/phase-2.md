@@ -37,7 +37,7 @@ Pre-flight only; no code changes yet.
 
 ---
 
-## Step 1 — Static export + `published` filter
+## Step 1 — Static export + `published` filter ✅
 
 Switch Next.js to static export and add a `published` field so unpublished drafts can live in the content folder without shipping.
 
