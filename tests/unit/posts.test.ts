@@ -1,5 +1,13 @@
 import { describe, test, expect } from 'vitest';
-import { applySort, filterPublished, formatDate, sortedPosts, type Post } from '../../app/lib/posts';
+import {
+  applySort,
+  filterPublished,
+  formatDate,
+  getAllTags,
+  getPostsByTag,
+  sortedPosts,
+  type Post,
+} from '../../app/lib/posts';
 
 const samplePosts: Post[] = [
   { title: 'Zebra Post', subTitle: '', date: '2024-01-15', published: true, tags: [], slug: 'zebra', body: '', permalink: '/posts/zebra' },
@@ -95,5 +103,52 @@ describe('filterPublished', () => {
   test('no NODE_ENV (test runner env) → filters drafts', () => {
     const result = filterPublished(mixedPosts, {});
     expect(result.map((p) => p.slug)).toEqual(['pub-a', 'pub-c']);
+  });
+});
+
+const taggedPosts: Post[] = [
+  { title: 'A', subTitle: '', date: '2024-01-01', published: true, tags: ['alpha', 'beta'], slug: 'a', body: '', permalink: '/posts/a' },
+  { title: 'B', subTitle: '', date: '2024-01-02', published: true, tags: ['beta', 'gamma'], slug: 'b', body: '', permalink: '/posts/b' },
+  { title: 'C', subTitle: '', date: '2024-01-03', published: true, tags: ['beta'], slug: 'c', body: '', permalink: '/posts/c' },
+  { title: 'D', subTitle: '', date: '2024-01-04', published: true, tags: [], slug: 'd', body: '', permalink: '/posts/d' },
+];
+
+describe('getAllTags', () => {
+  test('empty list → empty result', () => {
+    expect(getAllTags([])).toEqual([]);
+  });
+
+  test('counts tag occurrences across posts', () => {
+    const result = getAllTags(taggedPosts);
+    const counts = Object.fromEntries(result.map((t) => [t.tag, t.count]));
+    expect(counts).toEqual({ alpha: 1, beta: 3, gamma: 1 });
+  });
+
+  test('sorts by count desc, then alpha asc on ties', () => {
+    const result = getAllTags(taggedPosts);
+    expect(result.map((t) => t.tag)).toEqual(['beta', 'alpha', 'gamma']);
+  });
+
+  test('ignores posts with no tags', () => {
+    const onlyEmpty: Post[] = [
+      { title: 'X', subTitle: '', date: '2024-01-01', published: true, tags: [], slug: 'x', body: '', permalink: '/posts/x' },
+    ];
+    expect(getAllTags(onlyEmpty)).toEqual([]);
+  });
+});
+
+describe('getPostsByTag', () => {
+  test('returns posts containing the tag', () => {
+    const result = getPostsByTag('beta', taggedPosts);
+    expect(result.map((p) => p.slug)).toEqual(['a', 'b', 'c']);
+  });
+
+  test('returns empty array when tag not found', () => {
+    expect(getPostsByTag('missing', taggedPosts)).toEqual([]);
+  });
+
+  test('does not match substrings', () => {
+    const result = getPostsByTag('bet', taggedPosts);
+    expect(result).toEqual([]);
   });
 });

@@ -15,6 +15,7 @@ import AboutThisSiteWindow, {
 import BlogApp from './BlogApp';
 import AboutWindow from './AboutWindow';
 import ContactWindow from './ContactWindow';
+import TopicsWindow, { TOPICS_APP_ID } from './TopicsWindow';
 import { buildBlogMenu } from '../lib/menus';
 import TrashWindow from './TrashWindow';
 
@@ -92,6 +93,16 @@ function DesktopInit() {
         app: { id: ABOUT_THIS_SITE_APP_ID, name: 'About This Site', icon: '' },
       });
     };
+    const openTopics = () => {
+      dispatch({
+        type: 'ClassicyAppOpen',
+        app: { id: TOPICS_APP_ID, name: 'Topics', icon: '' },
+      });
+      dispatch({
+        type: 'ClassicyAppFocus',
+        app: { id: TOPICS_APP_ID },
+      });
+    };
     useAppManager.setState((state) => ({
       System: {
         ...state.System,
@@ -99,7 +110,10 @@ function DesktopInit() {
           ...state.System.Manager,
           Desktop: {
             ...state.System.Manager.Desktop,
-            systemMenu: [{ id: 'about-this-site', title: 'About This Site', onClickFunc: openAbout }],
+            systemMenu: [
+              { id: 'about-this-site', title: 'About This Site', onClickFunc: openAbout },
+              { id: 'topics', title: 'Topics', onClickFunc: openTopics },
+            ],
           },
         },
       },
@@ -148,6 +162,7 @@ export default function ClassicyDesktopInner() {
         <AboutThisSiteWindow />
         <AboutWindow />
         <ContactWindow />
+        <TopicsWindow />
         <TrashWindow />
       </ClassicyDesktop>
     </ClassicyAppManagerProvider>

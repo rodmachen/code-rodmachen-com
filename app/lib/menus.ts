@@ -1,6 +1,7 @@
 import { type ClassicyMenuItem } from 'classicy';
 import { ABOUT_APP_ID } from '../components/AboutWindow';
 import { CONTACT_APP_ID } from '../components/ContactWindow';
+import { TOPICS_APP_ID } from '../components/TopicsWindow';
 
 export type { ClassicyMenuItem };
 
@@ -33,6 +34,20 @@ export function buildBlogMenu({
               type: 'ClassicyWindowFocus',
               app: { id: 'blog' },
               window: { id: 'blog.listings' },
+            });
+          },
+        },
+        {
+          id: 'blog.file.open-topics',
+          title: 'Open Topics',
+          onClickFunc: () => {
+            dispatch({
+              type: 'ClassicyAppOpen',
+              app: { id: TOPICS_APP_ID, name: 'Topics', icon: '' },
+            });
+            dispatch({
+              type: 'ClassicyAppFocus',
+              app: { id: TOPICS_APP_ID },
             });
           },
         },

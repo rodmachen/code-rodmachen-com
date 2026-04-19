@@ -1,0 +1,96 @@
+.page {
+  min-height: 100vh;
+  max-height: none;
+  overflow-y: auto;
+  background: #dddddd;
+  color: #000;
+  font-family: Geneva, 'Lucida Grande', Verdana, sans-serif;
+  font-size: 14px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.heading {
+  font-family: 'ChicagoFLF', serif;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: auto;
+  font-smooth: never;
+  text-rendering: optimizeSpeed;
+  font-weight: normal;
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 0 0 16px 0;
+}
+
+.subheading {
+  font-family: 'ChicagoFLF', serif;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: auto;
+  font-smooth: never;
+  text-rendering: optimizeSpeed;
+  font-weight: normal;
+  font-size: 18px;
+  line-height: 1.2;
+  margin: 24px 0 12px 0;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.tagList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tagItem a {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 1px solid #888;
+  background: #fff;
+  text-decoration: none;
+  color: #000;
+}
+
+.tagItem a:hover {
+  background: #000;
+  color: #fff;
+}
+
+.tagCount {
+  color: #666;
+  margin-left: 4px;
+}
+
+.postList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.postItem {
+  padding: 8px 0;
+  border-bottom: 1px solid #bbb;
+}
+
+.postDate {
+  color: #666;
+  margin-left: 8px;
+  font-size: 13px;
+}
+
+.empty {
+  color: #666;
+  font-style: italic;
+}
