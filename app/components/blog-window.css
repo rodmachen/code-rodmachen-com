@@ -32,6 +32,13 @@
   max-height: calc(100vh - 20px);
 }
 
+/* WindowShade (collapse): our height !important prevents Classicy from shrinking the
+   window to the title bar. Restore height:auto so Classicy's inline style wins. */
+#blog_blog\.listings.classicyWindowCollapsed {
+  height: auto !important;
+  max-height: none;
+}
+
 /* Reader windows: attribute selector matches dynamic IDs like
    blog_blog.reader.hello-classicy, blog_blog.reader.typography-test, etc. */
 [id^="blog_blog.reader"] {
@@ -41,6 +48,11 @@
   /* WHY: overrides Classicy's inline height — fills viewport. */
   height: calc(100vh - 20px) !important;
   max-height: calc(100vh - 20px);
+}
+
+[id^="blog_blog.reader"].classicyWindowCollapsed {
+  height: auto !important;
+  max-height: none;
 }
 
 html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
