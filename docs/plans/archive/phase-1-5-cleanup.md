@@ -38,7 +38,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 > **Pause rule:** Pause between steps whenever the **model** changes or the **effort level** changes. Each step's assignment is at the bottom.
 
-### Step 1 — Delete dead code and scratch files
+### Step 1 — Delete dead code and scratch files ✅
 
 **Files to modify:**
 - Delete: `app/components/PostListingsWindow.tsx`
@@ -57,7 +57,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 2 — Add `types/classicy.d.ts`; eliminate `@ts-ignore` and `(state: any)`
+### Step 2 — Add `types/classicy.d.ts`; eliminate `@ts-ignore` and `(state: any)` ✅
 
 **Files to modify:**
 - New: `types/classicy.d.ts` (module augmentation declaring the runtime exports `useAppManager`, `useAppManagerDispatch`, `useSoundDispatch`, plus the slice of the store we read: `System.Manager.Applications.apps`, `System.Manager.Desktop.icons`, `System.Manager.DateAndTime`).
@@ -78,7 +78,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 3 — Extract `lib/posts.ts` (Post type, sort, formatDate)
+### Step 3 — Extract `lib/posts.ts` (Post type, sort, formatDate) ✅
 
 **Files to modify:**
 - New: `app/lib/posts.ts` — exports `Post` type, `sortedPosts` (sorted-by-date-desc), `formatDate`, `SortKey`, `SortDir`, `applySort`.
@@ -96,7 +96,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 4 — Extract `lib/menus.ts` (shared menu factory)
+### Step 4 — Extract `lib/menus.ts` (shared menu factory) ✅
 
 **Files to modify:**
 - New: `app/lib/menus.ts` — exports `ClassicyMenuItem` type and a `buildBlogMenu(deps)` function returning the File / Edit / View / Help menu structure. `deps` includes `dispatch`, optional `setZoom`, optional `disableViewItems` (true when no Reader window is focused, false when one is).
@@ -117,7 +117,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 5 — Fix `velite.config.ts` `as any` cast
+### Step 5 — Fix `velite.config.ts` `as any` cast ✅
 
 **Files to modify:**
 - `velite.config.ts` — replace `rehypeShiki as any` with one of: (a) `satisfies` assertion against the correct `Plugin` type imported from `unified`, (b) explicit type narrowing, or (c) `npm dedupe unified` + verify it collapses the duplicate resolved paths.
@@ -136,7 +136,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 6 — Refactor Hard Drive icon via public dispatches
+### Step 6 — Refactor Hard Drive icon via public dispatches ✅
 
 **Files to modify:**
 - `app/components/ClassicyDesktopInner.tsx` — delete the `needsHardDriveFix` reactive selector and its effect (lines 44–72). Replace with a single effect that dispatches `ClassicyDesktopIconRemove` for Classicy's auto-added "Macintosh HD" then `ClassicyDesktopIconAdd` with our preferred `label: 'Hard Drive'` and `location: [rightX, 40]`. The effect runs on mount and stays idempotent (safe to re-run).
@@ -154,7 +154,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 7 — Split mega-`setState` in `DesktopInit` into focused effects
+### Step 7 — Split mega-`setState` in `DesktopInit` into focused effects ✅
 
 **Files to modify:**
 - `app/components/ClassicyDesktopInner.tsx` — break the single `useEffect` block at lines 194–270 into:
@@ -178,7 +178,7 @@ Confirmed by reading the code directly + 3 parallel exploration agents:
 
 ---
 
-### Step 8 — Audit `blog-window.css` `!important` declarations
+### Step 8 — Audit `blog-window.css` `!important` declarations ✅
 
 **Files to modify:**
 - `app/components/blog-window.css` — go through each of the 22 `!important` rules; for each, classify as KEEP (typography contract: Chicago font, no smoothing, integer px, post-body styling) or DROP (cosmetic override of Classicy chrome that worked fine already). Add a one-line `/* WHY */` comment above each remaining `!important`.
