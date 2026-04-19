@@ -149,7 +149,7 @@ Topics surface in two places: a Classicy "Topics" app window (menu-accessible), 
 
 ---
 
-## Step 5 — SEO metadata (OG / Twitter / canonical)
+## Step 5 — SEO metadata (OG / Twitter / canonical) ✅
 
 - `app/layout.tsx`: add a default `Metadata` export with site-wide `title` template, `description`, `openGraph.siteName`, `twitter.card: 'summary_large_image'`, `metadataBase: new URL('https://code.rodmachen.com')`.
 - `app/posts/[slug]/page.tsx`: add `generateMetadata({ params })` that pulls the post and sets title, description (from `subTitle` or first ~160 chars of body), canonical, and an OG image built from the post's `thumbnail` public ID via the standard Cloudinary social-card transform (`c_fill,w_1200,h_630,f_auto,q_auto`).

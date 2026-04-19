@@ -1,6 +1,55 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { publishedPosts } from '../../lib/posts';
 import ClassicyShell from '../../components/ClassicyShell';
+
+const SITE_URL = 'https://code.rodmachen.com'
+const CLOUDINARY_CLOUD = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+}
+
+function buildCloudinaryOgUrl(publicId: string): string | null {
+  if (!CLOUDINARY_CLOUD) return null
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/c_fill,w_1200,h_630,f_auto,q_auto/${publicId}`
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const post = publishedPosts().find((p) => p.slug === slug)
+  if (!post) return {}
+
+  const description = post.subTitle
+    ? post.subTitle
+    : stripHtml(post.body).slice(0, 160)
+
+  const ogImageUrl = post.thumbnail ? buildCloudinaryOgUrl(post.thumbnail) : null
+
+  return {
+    title: post.title,
+    description,
+    alternates: {
+      canonical: `${SITE_URL}/posts/${slug}/`,
+    },
+    openGraph: {
+      title: post.title,
+      description,
+      type: 'article',
+      publishedTime: post.date,
+      ...(ogImageUrl ? { images: [{ url: ogImageUrl, width: 1200, height: 630 }] } : {}),
+    },
+    twitter: {
+      title: post.title,
+      description,
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
+    },
+  }
+}
 
 export function generateStaticParams() {
   const posts = publishedPosts();

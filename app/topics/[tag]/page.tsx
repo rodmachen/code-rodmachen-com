@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -7,6 +8,23 @@ import {
   getPostsByTag,
 } from '../../lib/posts';
 import styles from '../topics.module.css';
+
+const SITE_URL = 'https://code.rodmachen.com'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tag: string }>
+}): Promise<Metadata> {
+  const { tag } = await params
+  return {
+    title: `Topic: ${tag}`,
+    description: `Posts tagged "${tag}" on code – Rod Machen.`,
+    alternates: {
+      canonical: `${SITE_URL}/topics/${tag}/`,
+    },
+  }
+}
 
 export function generateStaticParams() {
   const tags = getAllTags();
