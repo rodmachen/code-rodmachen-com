@@ -93,7 +93,7 @@ Port the remark plugin from `edition-rodmachen-com` so markdown images resolve t
 
 ---
 
-## Step 3 — Topics: window + static routes
+## Step 3 — Topics: window + static routes ✅
 
 Topics surface in two places: a Classicy "Topics" app window (menu-accessible), and crawlable routes `/topics/` and `/topics/[tag]/`.
 
