@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import 'classicy/dist/classicy.css';
 import './globals.css';
 import './components/blog-window.css';
@@ -26,7 +27,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        {process.env.NODE_ENV === 'production' && (
+          <GoogleAnalytics gaId="G-VX04LCY48Q" />
+        )}
+      </body>
     </html>
   );
 }
