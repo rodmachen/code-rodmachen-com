@@ -1,5 +1,13 @@
 import { visit } from 'unist-util-visit';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 const SIZE_PRESETS: Record<string, number> = {
   small: 300,
   medium: 600,
@@ -66,7 +74,7 @@ export default function remarkCloudinaryImages() {
       // Build the figure HTML
       const imgAttrs = [
         `src="${src}"`,
-        `alt="${alt}"`,
+        `alt="${escapeHtml(alt)}"`,
         `loading="lazy"`,
         `width="${width}"`,
       ];
@@ -77,7 +85,7 @@ export default function remarkCloudinaryImages() {
       let html = `<figure class="img-${size}">`;
       html += `<img ${imgAttrs.join(' ')} />`;
       if (caption) {
-        html += `<figcaption>${caption}</figcaption>`;
+        html += `<figcaption>${escapeHtml(caption)}</figcaption>`;
       }
       html += `</figure>`;
 

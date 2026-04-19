@@ -7,9 +7,8 @@ import {
   getAllTags,
   getPostsByTag,
 } from '../../lib/posts';
+import { SITE_URL } from '../../lib/site';
 import styles from '../topics.module.css';
-
-const SITE_URL = 'https://code.rodmachen.com'
 
 export async function generateMetadata({
   params,
@@ -17,6 +16,8 @@ export async function generateMetadata({
   params: Promise<{ tag: string }>
 }): Promise<Metadata> {
   const { tag } = await params
+  // __empty is a sentinel used by generateStaticParams when no tags exist yet.
+  if (tag === '__empty') return { robots: { index: false, follow: false } }
   return {
     title: `Topic: ${tag}`,
     description: `Posts tagged "${tag}" on code – Rod Machen.`,

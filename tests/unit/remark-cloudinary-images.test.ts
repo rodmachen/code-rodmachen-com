@@ -112,4 +112,18 @@ describe('remarkCloudinaryImages', () => {
     const html = getHtml(tree);
     expect(html).toContain('loading="lazy"');
   });
+
+  it('escapes special characters in alt text', () => {
+    const tree = makeImageTree(CLOUD_URL, 'size:small', 'He said "hi" & <bye>');
+    remarkCloudinaryImages()(tree as any);
+    const html = getHtml(tree);
+    expect(html).toContain('alt="He said &quot;hi&quot; &amp; &lt;bye&gt;"');
+  });
+
+  it('escapes special characters in caption', () => {
+    const tree = makeImageTree(CLOUD_URL, 'size:medium Cats & "dogs" <3');
+    remarkCloudinaryImages()(tree as any);
+    const html = getHtml(tree);
+    expect(html).toContain('<figcaption>Cats &amp; &quot;dogs&quot; &lt;3</figcaption>');
+  });
 });

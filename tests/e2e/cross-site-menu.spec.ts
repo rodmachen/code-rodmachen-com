@@ -42,7 +42,5 @@ test('Apple menu rodmachen.com entry calls window.open with _blank', async ({ pa
   await expect(page.locator('#ext-rodmachen')).toBeVisible()
   await page.locator('#ext-rodmachen').click()
 
-  await page.waitForTimeout(300)
-
-  expect(openedCalls).toContain('https://rodmachen.com')
+  await expect.poll(() => openedCalls).toContain('https://rodmachen.com')
 })

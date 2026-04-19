@@ -1,6 +1,5 @@
 import { publishedPosts, type Post } from '../lib/posts'
-
-const SITE_URL = 'https://code.rodmachen.com'
+import { SITE_URL } from '../lib/site'
 
 export const dynamic = 'force-static'
 

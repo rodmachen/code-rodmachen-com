@@ -1,9 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { publishedPosts, getAllTags } from './lib/posts'
+import { SITE_URL } from './lib/site'
 
 export const dynamic = 'force-static'
-
-const SITE_URL = 'https://code.rodmachen.com'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const posts = publishedPosts()

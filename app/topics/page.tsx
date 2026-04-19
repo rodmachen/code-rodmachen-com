@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllTags } from '../lib/posts';
+import { SITE_URL } from '../lib/site';
 import styles from './topics.module.css';
 
 export const metadata: Metadata = {
   title: 'Topics',
   description: 'Browse all topics on code – Rod Machen.',
   alternates: {
-    canonical: 'https://code.rodmachen.com/topics/',
+    canonical: `${SITE_URL}/topics/`,
   },
 };
 

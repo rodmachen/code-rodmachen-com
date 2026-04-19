@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { publishedPosts } from '../../lib/posts';
+import { SITE_URL } from '../../lib/site';
 import ClassicyShell from '../../components/ClassicyShell';
-
-const SITE_URL = 'https://code.rodmachen.com'
 const CLOUDINARY_CLOUD = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 
 function stripHtml(html: string): string {
@@ -21,6 +20,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
+  // __empty is a sentinel used by generateStaticParams when no posts are published yet.
+  // It routes to notFound(), so suppress indexing.
+  if (slug === '__empty') return { robots: { index: false, follow: false } }
   const post = publishedPosts().find((p) => p.slug === slug)
   if (!post) return {}
 
