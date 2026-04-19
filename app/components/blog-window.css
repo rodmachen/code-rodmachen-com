@@ -322,3 +322,15 @@ html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
   height: 100%;
   overflow: hidden;
 }
+
+/* Hard Drive icon: suppress the inverted "open" state so it always looks
+   closed regardless of whether the blog app is running. The Posts window
+   itself is the indicator that content is visible. */
+#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-blend-mode: normal !important;
+}
+#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask * {
+  opacity: 1 !important;
+}

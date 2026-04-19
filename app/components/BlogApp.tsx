@@ -173,6 +173,17 @@ function ReaderWindow({
 }
 
 export default function BlogApp() {
+  const dispatch = useAppManagerDispatch();
+
+  // ClassicyAppOpen must fire before useBlogNavigation's focus effect.
+  // iP() clears all window focus; the hook's focus dispatch then wins as last writer.
+  useEffect(() => {
+    dispatch({
+      type: 'ClassicyAppOpen',
+      app: { id: 'blog', name: 'Blog', icon: '' },
+    });
+  }, [dispatch]);
+
   const { openSlugs, openPost, closePost } = useBlogNavigation();
 
   return (

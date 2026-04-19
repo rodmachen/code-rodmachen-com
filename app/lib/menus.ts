@@ -26,10 +26,6 @@ export function buildBlogMenu({
           title: 'Open Posts',
           onClickFunc: () => {
             dispatch({
-              type: 'ClassicyAppOpen',
-              app: { id: 'blog', name: 'Blog', icon: '' },
-            });
-            dispatch({
               type: 'ClassicyWindowOpen',
               app: { id: 'blog' },
               window: { id: 'blog.listings' },
