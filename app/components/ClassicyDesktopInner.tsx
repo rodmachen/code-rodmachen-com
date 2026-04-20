@@ -112,6 +112,8 @@ function DesktopInit() {
             systemMenu: [
               { id: 'about-this-site', title: 'About This Site', onClickFunc: openAbout },
               { id: 'sep-1', title: '──────────', disabled: true },
+              { id: 'restart', title: 'Restart\u2026', onClickFunc: () => { window.location.href = '/'; } },
+              { id: 'sep-2', title: '──────────', disabled: true },
               { id: 'ext-rodmachen', title: 'rodmachen.com | Home', onClickFunc: openExternal('https://rodmachen.com') },
               { id: 'ext-edition', title: 'Edition | Writing', onClickFunc: openExternal('https://edition.rodmachen.com') },
               { id: 'ext-photo', title: 'Photo | Portfolio', onClickFunc: openExternal('https://photo.rodmachen.com') },
