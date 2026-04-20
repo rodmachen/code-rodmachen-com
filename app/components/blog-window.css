@@ -323,14 +323,15 @@ html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
   overflow: hidden;
 }
 
-/* Hard Drive icon: suppress the inverted "open" state so it always looks
-   closed regardless of whether the blog app is running. The Posts window
-   itself is the indicator that content is visible. */
-#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask {
+/* Hard Drive and Trash icons: suppress the inverted "open" state so they
+   always look closed regardless of app open state. */
+#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask,
+#trash\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
   background-blend-mode: normal !important;
 }
-#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask * {
+#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask *,
+#trash\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask * {
   opacity: 1 !important;
 }
