@@ -1,3 +1,6 @@
+// These tests run against the dev server, where all posts are visible regardless
+// of `published` status. If run against a production build, post-level tests
+// will fail unless SHOW_DRAFTS=true is set.
 import { test, expect } from '@playwright/test'
 
 test('/posts/hello-classicy/ has og:title meta tag', async ({ page }) => {

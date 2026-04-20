@@ -18,8 +18,11 @@ const SIZE_PRESETS: Record<string, number> = {
 const CLOUDINARY_PATTERN = /res\.cloudinary\.com/;
 
 function insertTransformations(url: string, width: number): string {
-  // Insert w_{width},f_auto,q_auto into the upload path
-  // URL format: https://res.cloudinary.com/CLOUD/image/upload/[existing_transforms/]public_id
+  // Prepends w_{width},f_auto,q_auto immediately after /upload/.
+  // If the URL already contains chained transforms (e.g. /upload/c_fill,h_400/…),
+  // the new segment runs first — Cloudinary applies left-to-right, so the resize
+  // fires before any caller-supplied crops. Avoid embedding transforms in markdown
+  // image URLs; use the size: directive in the title field instead.
   return url.replace(
     /\/upload\//,
     `/upload/w_${width},f_auto,q_auto/`,
