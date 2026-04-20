@@ -6,7 +6,7 @@ describe('Content Pipeline', () => {
   test('posts are generated correctly', () => {
     expect(posts).toBeDefined();
     expect(Array.isArray(posts)).toBe(true);
-    expect(posts.length).toBe(2);
+    expect(posts.length).toBe(3);
 
     const helloClassicy = posts.find((p: any) => p.slug === 'hello-classicy');
     expect(helloClassicy).toBeDefined();

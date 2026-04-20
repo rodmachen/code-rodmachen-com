@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {},
+  output: 'export',
+  trailingSlash: true,
+  images: { unoptimized: true },
 };
 
 let dev = process.env.NODE_ENV === 'development';

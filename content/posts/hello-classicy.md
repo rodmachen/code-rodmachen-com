@@ -2,6 +2,7 @@
 title: Hello, Classicy
 subTitle: First post on the rebuild
 date: 2026-04-10
+published: false
 tags: [meta, classicy]
 slug: hello-classicy
 ---

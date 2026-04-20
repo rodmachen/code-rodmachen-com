@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "analyze": "ANALYZE=true next build",
     "start": "next start",
@@ -14,6 +14,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.4",
     "classicy": "0.6.54",
     "next": "16.2.3",
     "react": "^18",
@@ -31,6 +32,7 @@
     "prettier": "3.8.2",
     "shiki": "4.0.2",
     "typescript": "^5",
+    "unist-util-visit": "^5.1.0",
     "velite": "0.3.1",
     "vitest": "4.1.4"
   }

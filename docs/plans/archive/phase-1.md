@@ -1672,7 +1672,7 @@ background covers the full viewport behind all windows and desktop icons.
 
 ---
 
-## Step 12 — Additional UI Polish & Bug Fixes
+## Step 12 — Additional UI Polish & Bug Fixes ✅
 
 **Executor:** Gemini 3.1 Pro · **Reviewer:** Opus
 **Test posture:** tests-alongside — UI/behavioral fixes verified manually and via existing automated tests.
@@ -1711,7 +1711,7 @@ A third round of UI polish based on manual screenshot auditing and recent uncomm
 
 ---
 
-# Step 13 — Post Browsing & Reading Redesign
+# Step 13 — Post Browsing & Reading Redesign ✅
 
 ## Context
 
@@ -2004,7 +2004,7 @@ The current architecture uses two separate ClassicyApps (PostListingsWindow and 
 
 ---
 
-## Step 14 — Vercel preview deploy + bundle measurement
+## Step 14 — Vercel preview deploy + bundle measurement ✅
 
 **Executor:** Gemini 3.1 Pro (mechanical) + Opus (interpret) + User (Vercel setup) · **Reviewer:** Opus
 **Test posture:** tests-alongside

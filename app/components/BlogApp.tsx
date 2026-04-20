@@ -175,13 +175,8 @@ function ReaderWindow({
 export default function BlogApp() {
   const dispatch = useAppManagerDispatch();
 
-  // Register ClassicyAppOpen BEFORE useBlogNavigation so this effect
-  // fires first in the mount commit. Order matters because
-  // ClassicyAppOpen → iP() calls pi() which clears all window focus
-  // and then re-focuses the "last window in the store array" — which
-  // on remount after SPA navigation can be a reader from a prior
-  // session that's no longer rendered. The hook's focus dispatch
-  // needs to run AFTER iP so it's the last writer and wins.
+  // ClassicyAppOpen must fire before useBlogNavigation's focus effect.
+  // iP() clears all window focus; the hook's focus dispatch then wins as last writer.
   useEffect(() => {
     dispatch({
       type: 'ClassicyAppOpen',

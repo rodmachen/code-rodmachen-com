@@ -15,6 +15,7 @@ import AboutThisSiteWindow, {
 import BlogApp from './BlogApp';
 import AboutWindow from './AboutWindow';
 import ContactWindow from './ContactWindow';
+import TopicsWindow from './TopicsWindow';
 import { buildBlogMenu } from '../lib/menus';
 import TrashWindow from './TrashWindow';
 
@@ -35,10 +36,11 @@ function DesktopInit() {
       type: 'ClassicyDesktopIconRemove',
       app: { id: 'Finder.app', name: 'Macintosh HD' },
     });
+    // Use 'blog' so double-clicking Hard Drive opens/focuses the BlogApp (Posts listings).
     dispatch({
       type: 'ClassicyDesktopIconAdd',
       app: {
-        id: 'Finder.app',
+        id: 'blog',
         name: 'Hard Drive',
         icon: ClassicyIcons.system.drives.disk,
       },
@@ -54,7 +56,7 @@ function DesktopInit() {
     const rightX = typeof window !== 'undefined' ? window.innerWidth - 100 : 900;
     dispatch({
       type: 'ClassicyDesktopIconAdd',
-      app: { id: 'trash', name: 'Trash', icon: ClassicyIcons.system.desktop.trashFull },
+      app: { id: 'trash', name: 'Trash', icon: ClassicyIcons.system.desktop.trashEmpty },
       label: 'Trash',
       // Trash icon in bottom-right corner. Icon+label is ~68px tall;
       // 120px from bottom gives ~52px clearance below the label.
@@ -91,7 +93,15 @@ function DesktopInit() {
         type: 'ClassicyAppOpen',
         app: { id: ABOUT_THIS_SITE_APP_ID, name: 'About This Site', icon: '' },
       });
+      dispatch({
+        type: 'ClassicyAppFocus',
+        app: { id: ABOUT_THIS_SITE_APP_ID },
+      });
     };
+    const openExternal = (url: string) => () => {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
+    // ClassicyMenuItem has no native separator field; a disabled dash item is the best available workaround.
     useAppManager.setState((state) => ({
       System: {
         ...state.System,
@@ -99,7 +109,15 @@ function DesktopInit() {
           ...state.System.Manager,
           Desktop: {
             ...state.System.Manager.Desktop,
-            systemMenu: [{ id: 'about-this-site', title: 'About This Site', onClickFunc: openAbout }],
+            systemMenu: [
+              { id: 'about-this-site', title: 'About This Site', onClickFunc: openAbout },
+              { id: 'sep-1', title: '──────────', disabled: true },
+              { id: 'restart', title: 'Restart\u2026', onClickFunc: () => { window.location.href = '/'; } },
+              { id: 'sep-2', title: '──────────', disabled: true },
+              { id: 'ext-rodmachen', title: 'rodmachen.com | Home', onClickFunc: openExternal('https://rodmachen.com') },
+              { id: 'ext-edition', title: 'Edition | Writing', onClickFunc: openExternal('https://edition.rodmachen.com') },
+              { id: 'ext-photo', title: 'Photo | Portfolio', onClickFunc: openExternal('https://photo.rodmachen.com') },
+            ],
           },
         },
       },
@@ -148,6 +166,7 @@ export default function ClassicyDesktopInner() {
         <AboutThisSiteWindow />
         <AboutWindow />
         <ContactWindow />
+        <TopicsWindow />
         <TrashWindow />
       </ClassicyDesktop>
     </ClassicyAppManagerProvider>

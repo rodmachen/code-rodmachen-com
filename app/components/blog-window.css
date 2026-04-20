@@ -32,6 +32,13 @@
   max-height: calc(100vh - 20px);
 }
 
+/* WindowShade (collapse): our height !important prevents Classicy from shrinking the
+   window to the title bar. Restore height:auto so Classicy's inline style wins. */
+#blog_blog\.listings.classicyWindowCollapsed {
+  height: auto !important;
+  max-height: none;
+}
+
 /* Reader windows: attribute selector matches dynamic IDs like
    blog_blog.reader.hello-classicy, blog_blog.reader.typography-test, etc. */
 [id^="blog_blog.reader"] {
@@ -41,6 +48,11 @@
   /* WHY: overrides Classicy's inline height — fills viewport. */
   height: calc(100vh - 20px) !important;
   max-height: calc(100vh - 20px);
+}
+
+[id^="blog_blog.reader"].classicyWindowCollapsed {
+  height: auto !important;
+  max-height: none;
 }
 
 html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
@@ -247,6 +259,54 @@ html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
   flex-shrink: 0;
 }
 
+/* Topics window */
+.topicsWindowContent {
+  padding: 12px 14px;
+  font-family: Geneva, 'Lucida Grande', Verdana, sans-serif;
+  font-size: 12px;
+  color: #000;
+  overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.topicsWindowEmpty {
+  color: #666;
+  font-style: italic;
+}
+
+.topicsWindowList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topicsWindowItem a {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #888;
+  background: #fff;
+  text-decoration: none;
+  color: #000;
+}
+
+.topicsWindowItem a:hover {
+  background: #000;
+  color: #fff;
+}
+
+.topicsWindowCount {
+  color: #666;
+  margin-left: 4px;
+}
+
+.topicsWindowItem a:hover .topicsWindowCount {
+  color: #ccc;
+}
+
 /* Bondi Blue stipple desktop background */
 #classicyDesktop {
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGNgKO9gWLWKAYTLOwAeNASnVBlSOwAAAABJRU5ErkJggg==");
@@ -261,4 +321,17 @@ html[data-blog-zoom='full'] [id^="blog_blog.reader"] {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+/* Hard Drive and Trash icons: suppress the inverted "open" state so they
+   always look closed regardless of app open state. */
+#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask,
+#trash\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-blend-mode: normal !important;
+}
+#blog\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask *,
+#trash\.shortcut.classicyDesktopIconOpen .classicyDesktopIconMaskOuter .classicyDesktopIconMask * {
+  opacity: 1 !important;
 }
